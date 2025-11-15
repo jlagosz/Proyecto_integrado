@@ -1,0 +1,39 @@
+{% extends "discopro/base.html" %}
+{% load static %}
+
+{% block title %}Dashboard - DiscoPro{% endblock %}
+
+{% block content %}
+    <h1 class="dashboard-h1">Dashboard</h1>
+    <p class="text-muted">Resumen general del estado de la operación.</p>
+    
+    <div class="card-container">
+        <div class="dashboard-card">
+            <div class="card-icon icon-farmacias">
+                <i class="bi bi-store"></i>
+            </div>
+            <div class="card-info">
+                <h3>Farmacias Activas</h3>
+                <p>{{ total_farmacias }}</p> 
+            </div>
+        </div>
+         <div class="dashboard-card">
+            <div class="card-icon icon-motoristas">
+                <i class="bi bi-person-badge"></i>
+            </div>
+            <div class="card-info">
+                <h3>Motoristas Totales</h3>
+                <p>{{ total_motoristas }}</p>
+            </div>
+        </div>
+        <div class="dashboard-card">
+            <div class="card-icon icon-motos">
+                <i class="bi bi-speedometer2"></i>
+            </div>
+            <div class="card-info">
+                <h3>Motos en Flota</h3>
+                <p>{{ total_motos }}</p>
+            </div>
+        </div>
+    </div>
+{% endblock %}

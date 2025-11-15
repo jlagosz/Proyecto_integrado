@@ -1,0 +1,99 @@
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 260px;
+    padding: 1rem;
+    background-color: #2c3e50;
+    z-index: 1030;
+    overflow-y: auto;
+}
+
+/* El logo o título principal */
+.sidebar-header {
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid #465a70;
+    text-align: center;
+}
+
+.sidebar-header a {
+    color: #ffffff;
+    font-size: 1.5rem;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+/* Estilo de los enlaces de navegación */
+.sidebar-nav .nav-link {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #bdc3c7;
+    padding: 0.75rem 1rem;
+    border-radius: 0.375rem;
+    margin-bottom: 0.25rem;
+    display: flex;
+    align-items: center;
+    border-left: 4px solid transparent;
+    transition: background-color 0.2s, border-left 0.2s;
+}
+
+/* Íconos dentro de los enlaces */
+.sidebar-nav .nav-link .bi {
+    margin-right: 0.75rem;
+    font-size: 1.2rem;
+    width: 20px;
+}
+
+/* Efecto hover sobre los enlaces */
+.sidebar-nav .nav-link:hover {
+    background-color: #34495e;
+    color: #ffffff;
+}
+
+/* Estilo para el enlace activo  */
+.sidebar-nav .nav-link.active {
+    background-color: transparent;
+    color: #ffffff;
+    font-weight: 600;
+    border-left: 4px solid #3498db;
+}
+
+/* El contenido principal */
+.main-content {
+    margin-left: 260px;
+    padding: 2rem;
+}
+
+/* Ajuste para pantallas pequeñas (móviles) */
+@media (max-width: 767.98px) {
+    .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+        padding: 0.5rem 1rem;
+    }
+    
+    .sidebar-header {
+        padding: 0.5rem 0;
+        margin: 0;
+        border: none;
+        text-align: left;
+    }
+    
+    .sidebar-nav {
+        display: flex;
+        flex-direction: row;
+    }
+    
+    .sidebar-nav .nav-link.active {
+        border-left: 4px solid transparent;
+        background-color: #1abc9c;
+    }
+
+    .main-content {
+        margin-left: 0;
+        padding: 1rem;
+    }
+}

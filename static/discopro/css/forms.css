@@ -1,0 +1,7 @@
+/* Estilos para el contenido de las pestañas en los formularios */
+.tab-content {
+    border: 1px solid #dee2e6;
+    border-top: none;
+    padding: 1.5rem 1rem;
+    border-radius: 0 0 0.375rem 0.375rem;
+}

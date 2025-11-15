@@ -1,0 +1,54 @@
+{% extends 'discopro/base.html' %}
+{% load static %}
+{% block title %}Listado de Movimientos{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="lista-h1">Listado de Movimientos</h1>
+    <a href="{% url 'movimiento_crear' %}" class="btn btn-primary">Crear Nuevo Movimiento</a>
+</div>
+
+<form method="get" class="mb-4">
+    <div class="input-group">
+        <input type="text" class="form-control" name="q" placeholder="Buscar por ID, Origen, Destino, Usuario..." value="{{ request.GET.q }}">
+        <button class="btn btn-outline-secondary" type="submit">Buscar</button>
+    </div>
+</form>
+
+<table class="table table-striped table-hover">
+    <thead class="table-dark">
+        <tr>
+            <th>ID Mov.</th>
+            <th>Tipo</th>
+            <th>Origen</th>
+            <th>Destino Final</th>
+            <th>Motorista</th>
+            <th>Fecha</th>
+            <th>Estado</th>
+            <th>Acciones</th> </tr>
+    </thead>
+    <tbody>
+        {% for movimiento in movimientos %}
+        <tr>
+            <td>{{ movimiento.id_movimiento }}</td>
+            <td>{{ movimiento.tipo_movimiento.nombre }}</td>
+            <td>{{ movimiento.origen }}</td>
+            <td>{{ movimiento.destino }}</td>
+            <td>{{ movimiento.motorista_asignado|default:"N/A" }}</td>
+            <td>{{ movimiento.fecha_movimiento|date:"d-m-Y H:i" }}</td>
+            <td><span class="badge bg-primary">{{ movimiento.get_estado_display }}</span></td>
+            
+            <td>
+                <a href="{{ movimiento.get_absolute_url }}" class="btn btn-sm btn-info">Ver Detalle</a>
+                <a href="{% url 'movimiento_editar' movimiento.pk %}" class="btn btn-sm btn-warning">Editar</a>
+                <a href="{% url 'movimiento_eliminar' movimiento.pk %}" class="btn btn-sm btn-danger">Eliminar</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="8" class="text-center">No hay movimientos registrados.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

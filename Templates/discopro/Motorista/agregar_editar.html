@@ -1,0 +1,21 @@
+{% extends 'discopro/base.html' %}
+
+{% block title %}
+  {% if form.instance.pk %}Editar Motorista{% else %}Agregar Motorista{% endif %}
+{% endblock %}
+
+{% block content %}
+  <h1 class="lista-h1">{% if form.instance.pk %}Editar Motorista{% else %}Agregar Nuevo Motorista{% endif %}</h1>
+  <hr>
+
+  <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      
+      {{ form.as_p }}
+
+      <button type="submit" class="btn btn-primary mt-3">
+          {% if form.instance.pk %}Actualizar Motorista{% else %}Guardar Motorista{% endif %}
+      </button>
+      <a href="{% url 'motorista_lista' %}" class="btn btn-secondary mt-3">Cancelar</a>
+  </form>
+{% endblock %}

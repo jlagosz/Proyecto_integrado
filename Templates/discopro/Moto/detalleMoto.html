@@ -1,0 +1,141 @@
+{% extends 'discopro/base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}Detalle de la Moto{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="lista-h1">{{ moto.marca }} {{ moto.modelo }} ({{ moto.patente }})</h1>
+    <div>
+        <a href="{% url 'gestionar_documentacion_moto' moto.pk %}" class="btn btn-info">Gestionar Documentos</a>
+        <a href="{% url 'crear_mantenimiento' moto.pk %}" class="btn btn-success">Registrar Mantenimiento</a>
+        <a href="{% url 'moto_modificar' moto.pk %}" class="btn btn-warning">Editar Moto</a>
+        <a href="{% url 'moto_lista' %}" class="btn btn-secondary">Volver al listado</a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        
+        <div class="card mb-4">
+            <div class="card-header"><strong>Datos del Vehículo</strong></div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-4">Patente</dt>
+                    <dd class="col-sm-8">{{ moto.patente }}</dd>
+                    <dt class="col-sm-4">Marca</dt>
+                    <dd class="col-sm-8">{{ moto.marca }}</dd>
+                    <dt class="col-sm-4">Modelo</dt>
+                    <dd class="col-sm-8">{{ moto.modelo }}</dd>
+                    <dt class="col-sm-4">Año</dt>
+                    <dd class="col-sm-8">{{ moto.anio }}</dd>
+                    <dt class="col-sm-4">N° Chasis</dt>
+                    <dd class="col-sm-8">{{ moto.numero_chasis|default:"N/A" }}</dd>
+                    <dt class="col-sm-4">Motor</dt>
+                    <dd class="col-sm-8">{{ moto.motor|default:"N/A" }}</dd>
+                </dl>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <strong>Documentación</strong>
+                <a href="{% url 'gestionar_documentacion_moto' moto.pk %}" class="btn btn-sm btn-outline-secondary">Gestionar</a>
+            </div>
+            <div class="card-body">
+                {% with doc=moto.documentacion %}
+                    {% if doc %}
+                        <h5 class="card-title">Año {{ doc.anio }}</h5>
+                        <p>
+                            <a href="{% if doc.permiso_circulacion_file %}{{ doc.permiso_circulacion_file.url }}{% else %}.{% endif %}" 
+                               class="btn {% if doc.is_permiso_vigente %}btn-outline-success{% else %}btn-outline-danger{% endif %} {% if not doc.permiso_circulacion_file %}disabled{% endif %}" 
+                               target="_blank">
+                               Permiso
+                            </a>
+                            
+                            <a href="{% if doc.seguro_obligatorio_file %}{{ doc.seguro_obligatorio_file.url }}{% else %}.{% endif %}" 
+                               class="btn {% if doc.is_seguro_vigente %}btn-outline-success{% else %}btn-outline-danger{% endif %} {% if not doc.seguro_obligatorio_file %}disabled{% endif %}" 
+                               target="_blank">
+                               Seguro
+                            </a>
+                            
+                            <a href="{% if doc.revision_tecnica_file %}{{ doc.revision_tecnica_file.url }}{% else %}.{% endif %}" 
+                               class="btn {% if doc.is_revision_vigente %}btn-outline-success{% else %}btn-outline-danger{% endif %} {% if not doc.revision_tecnica_file %}disabled{% endif %}" 
+                               target="_blank">
+                               Revisión
+                            </a>
+                            </p>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Venc. Permiso:</span>
+                                <span class="text-muted">{{ doc.permiso_circulacion_vencimiento|date:"d-m-Y"|default:"Sin fecha" }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Venc. Seguro:</span>
+                                <span class="text-muted">{{ doc.seguro_obligatorio_vencimiento|date:"d-m-Y"|default:"Sin fecha" }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Venc. Revisión:</span>
+                                <span class="text-muted">{{ doc.revision_tecnica_vencimiento|date:"d-m-Y"|default:"Sin fecha" }}</span>
+                            </li>
+                        </ul>
+                    {% else %}
+                        <p class="text-muted">No hay documentación registrada para esta moto.</p>
+                    {% endif %}
+                {% endwith %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <strong>Historial de Asignaciones</strong>
+                <a href="{% url 'asignar_moto_motorista' moto.pk %}" class="btn btn-sm btn-outline-secondary">Asignar</a>
+            </div>
+             <ul class="list-group list-group-flush" style="max-height: 200px; overflow-y: auto;">
+                {% for asignacion in moto.asignacionmoto_set.all %}
+                    <li class="list-group-item">
+                        <strong>{{ asignacion.motorista|default:"Sin Asignar" }}</strong>
+                        <small class="text-muted d-block">
+                            {{ asignacion.fechaAsignacion|date:"d-m-Y" }}
+                            {% if asignacion.fechaTermino %}
+                                al {{ asignacion.fechaTermino|date:"d-m-Y" }}
+                            {% endif %}
+                            (Estado: {{ asignacion.estado }})
+                        </small>
+                    </li>
+                {% empty %}
+                    <li class="list-group-item text-muted">Sin historial de asignaciones.</li>
+                {% endfor %}
+             </ul>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <strong>Historial de Mantenimiento</strong>
+                <a href="{% url 'crear_mantenimiento' moto.pk %}" class="btn btn-sm btn-outline-secondary">Registrar</a>
+            </div>
+            <ul class="list-group list-group-flush" style="max-height: 300px; overflow-y: auto;">
+                {% for mant in moto.mantenimientos.all|dictsortreversed:"fecha_mantenimiento" %}
+                    <li class="list-group-item">
+                        <strong>{{ mant.fecha_mantenimiento|date:"d-m-Y" }}</strong>: {{ mant.descripcion }}
+                        <small class="text-muted d-block">
+                            Taller: {{ mant.taller|default:"N/A" }} | 
+                            Kilometraje: {{ mant.kilometraje|default:"N/A" }} | 
+                            Costo: ${{ mant.costo|default:"0" }}
+                            {% if mant.factura %}
+                                | <a href="{{ mant.factura.url }}" target="_blank">Ver Factura</a>
+                            {% endif %}
+                        </small>
+                    </li>
+                {% empty %}
+                    <li class="list-group-item text-muted">No hay mantenimientos registrados.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends 'discopro/base.html' %}
+
+{% block title %}Listado de Motos{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="lista-h1">Listado de Motos</h1>
+    <a href="{% url 'moto_crear' %}" class="btn btn-primary">Agregar Nueva Moto</a>
+</div>
+
+<form method="get" class="mb-4">
+    <div class="input-group">
+        <input type="text" class="form-control" name="q" placeholder="Buscar por patente o marca..." value="{{ request.GET.q }}">
+        <button class="btn btn-outline-secondary" type="submit">Buscar</button>
+    </div>
+</form>
+
+<table class="table table-striped table-hover">
+    <thead class="table-dark">
+        <tr>
+            <th>Patente</th>
+            <th>Marca</th>
+            <th>Modelo</th>
+            <th>Año</th>
+            <th>Motorista Asignado</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for moto in motos %}
+        <tr>
+            <td><strong>{{ moto.patente }}</strong></td>
+            <td>{{ moto.marca }}</td>
+            <td>{{ moto.modelo }}</td>
+            <td>{{ moto.anio }}</td>
+            <td>{{ moto.motorista_actual|default:"Sin asignar" }}</td>
+            <td>
+                <a href="{% url 'detalle_moto' moto.pk %}" class="btn btn-sm btn-info">Ver</a>
+                <a href="{% url 'moto_modificar' moto.pk %}" class="btn btn-sm btn-warning">Editar</a>
+                <a href="{% url 'moto_eliminar' moto.pk %}" class="btn btn-sm btn-danger">Eliminar</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="6" class="text-center">No hay motos registradas.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<a href="{% url 'index' %}" class="btn btn-secondary mt-4">Volver al Dashboard</a>
+{% endblock %}

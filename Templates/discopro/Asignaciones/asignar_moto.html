@@ -1,0 +1,16 @@
+{% extends 'discopro/base.html' %}
+
+{% block title %}Asignar Moto {{ moto.patente }}{% endblock %}
+
+{% block content %}
+  <h1 class="lista-h1">Asignar Moto {{ moto.patente }}</h1>
+  <hr>
+  <p>Selecciona el motorista al que se asignará esta moto.</p>
+
+  <form method="post">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit" class="btn btn-primary mt-3">Guardar Asignación</button>
+      <a href="{% url 'detalle_moto' moto.pk %}" class="btn btn-secondary mt-3">Cancelar</a>
+  </form>
+{% endblock %}

@@ -1,0 +1,102 @@
+{% extends 'discopro/base.html' %}
+
+{% block title %}Detalle del Motorista{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="lista-h1">{{ motorista }}</h1>
+    <div>
+        <a href="{% url 'motorista_modificar' motorista.pk %}" class="btn btn-warning">Editar</a>
+        <a href="{% url 'motorista_lista' %}" class="btn btn-secondary">Volver al listado</a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header"><strong>Datos Personales</strong></div>
+            <div class="card-body">
+                <dl class="row">
+
+                    <dt class="col-sm-5">Estado</dt>
+                    <dd class="col-sm-7">
+                        <span class="badge 
+                            {% if motorista.estado == 'activo' %}bg-success
+                            {% elif motorista.estado == 'inactivo' %}bg-secondary
+                            {% else %}bg-warning text-dark{% endif %}">
+                            {{ motorista.get_estado_display }}
+                        </span>
+                    </dd>
+                    <dt class="col-sm-5">RUT</dt>
+                    <dd class="col-sm-7">{{ motorista.rut }}</dd>
+                    <dt class="col-sm-5">Fecha de Nacimiento</dt>
+                    <dd class="col-sm-7">{{ motorista.fecha_nacimiento }}</dd>
+                    <dt class="col-sm-5">Dirección</dt>
+                    <dd class="col-sm-7">{{ motorista.direccion }}, {{ motorista.comuna.nombreComuna }}</dd>
+                    <dt class="col-sm-5">Teléfono</dt>
+                    <dd class="col-sm-7">{{ motorista.telefono }}</dd>
+                    <dt class="col-sm-5">Correo</dt>
+                    <dd class="col-sm-7">{{ motorista.correo }}</dd>
+                    <dt class="col-sm-5">Licencia</dt>
+                    <dd class="col-sm-7">
+                        {% if motorista.licencia_conducir %}
+                            <a href="{{ motorista.licencia_conducir.url }}" target="_blank">Ver documento</a>
+                        {% else %}
+                            No registrada
+                        {% endif %}
+                    </dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <strong>Contactos de Emergencia</strong>
+                <a href="{% url 'crear_contacto_emergencia' motorista.pk %}" class="btn btn-sm btn-outline-secondary">Añadir Contacto</a>
+            </div>
+            <ul class="list-group list-group-flush" style="max-height: 200px; overflow-y: auto;">
+                {% for contacto in contactos %}
+                    <li class="list-group-item">
+                        {{ contacto.nombreCompleto }} ({{ contacto.parentesco }}) - {{ contacto.telefono }}
+                    </li>
+                {% empty %}
+                    <li class="list-group-item text-muted">No hay contactos registrados.</li>
+                {% endfor %}
+            </ul>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header"><strong>Historial de Farmacias</strong></div>
+             <ul class="list-group list-group-flush" style="max-height: 200px; overflow-y: auto;">
+                {% for asignacion in asignaciones_farmacia %}
+                    <li class="list-group-item">
+                        <strong>{{ asignacion.farmacia.nombre }}</strong>
+                        <small class="text-muted d-block">Desde: {{ asignacion.fechaAsignacion }}</small>
+                    </li>
+                {% empty %}
+                    <li class="list-group-item text-muted">Sin historial de asignaciones.</li>
+                {% endfor %}
+             </ul>
+             <div class="card-footer">
+                <a href="{% url 'asignar_farmacia' motorista.pk %}" class="btn btn-success w-100">Asignar Nueva Farmacia</a>
+             </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header"><strong>Historial de Motos</strong></div>
+             <ul class="list-group list-group-flush" style="max-height: 200px; overflow-y: auto;">
+                {% for asignacion in asignaciones_moto %}
+                    <li class="list-group-item">
+                        <strong>{{ asignacion.moto.patente }}</strong> ({{ asignacion.moto.marca }})
+                        <small class="text-muted d-block">Desde: {{ asignacion.fechaAsignacion }} (Estado: {{ asignacion.estado }})</small>
+                    </li>
+                {% empty %}
+                    <li class="list-group-item text-muted">Sin historial de motos.</li>
+                {% endfor %}
+             </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

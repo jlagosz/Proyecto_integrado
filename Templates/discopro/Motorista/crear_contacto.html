@@ -1,0 +1,20 @@
+{% extends 'discopro/base.html' %}
+{% load static %}
+
+{% block title %}Añadir Contacto - {{ motorista.nombres }}{% endblock %}
+
+{% block content %}
+<h1 class="lista-h1">Añadir Contacto de Emergencia para {{ motorista }}</h1>
+<hr>
+<p>Ingresa los datos del nuevo contacto.</p>
+
+<form method="post">
+    {% csrf_token %}
+    
+    {{ form.as_p }}
+    
+    <button type="submit" class="btn btn-primary mt-3">Guardar Contacto</button>
+    <a href="{% url 'detalle_motorista' motorista.pk %}" class="btn btn-secondary mt-3">Cancelar</a>
+</form>
+
+{% endblock %}

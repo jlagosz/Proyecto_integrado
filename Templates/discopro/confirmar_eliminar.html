@@ -1,0 +1,16 @@
+{% extends 'discopro/base.html' %}
+
+{% block title %}Confirmar Eliminación{% endblock %}
+
+{% block content %}
+  <h1 class="lista-h1">¿Estás seguro?</h1>
+  <hr>
+  <p>Estás a punto de eliminar permanentemente el siguiente objeto: <strong>{{ object }}</strong>.</p>
+  <p>Esta acción no se puede deshacer.</p>
+
+  <form method="post">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger">Sí, eliminar</button>
+      <a href="{{ request.META.HTTP_REFERER }}" class="btn btn-secondary">Cancelar</a>
+  </form>
+{% endblock %}

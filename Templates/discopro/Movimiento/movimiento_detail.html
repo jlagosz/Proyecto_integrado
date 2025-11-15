@@ -1,0 +1,83 @@
+{% extends 'discopro/base.html' %}
+{% load static %}
+{% block title %}Detalle del Movimiento {{ movimiento.id_movimiento }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="lista-h1">Detalle del Movimiento: #{{ movimiento.id_movimiento }}</h1>
+    <a href="{% url 'movimiento_lista' %}" class="btn btn-secondary">Volver al Listado</a>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <strong>Resumen del Movimiento (Padre)</strong>
+        <div>
+            <a href="{% url 'movimiento_editar' movimiento.pk %}" class="btn btn-sm btn-outline-warning">Editar</a>
+            <a href="{% url 'movimiento_eliminar' movimiento.pk %}" class="btn btn-sm btn-outline-danger">Eliminar</a>
+        </div>
+    </div>
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">ID Movimiento:</dt>
+            <dd class="col-sm-9">{{ movimiento.id_movimiento }}</dd>
+            <dt class="col-sm-3">Origen Inicial:</dt>
+            <dd class="col-sm-9">{{ movimiento.origen }}</dd>
+            <dt class="col-sm-3">Destino Final:</dt>
+            <dd class="col-sm-9">{{ movimiento.destino }}</dd>
+            <dt class="col-sm-3">Tipo General:</dt>
+            <dd class="col-sm-9">{{ movimiento.tipo_movimiento.nombre }}</dd>
+            <dt class="col-sm-3">Estado General:</dt>
+            <dd class="col-sm-9"><span class="badge bg-primary">{{ movimiento.get_estado_display }}</span></dd>
+            <dt class="col-sm-3">Motorista Principal:</dt>
+            <dd class="col-sm-9">{{ movimiento.motorista_asignado|default:"N/A" }}</dd>
+            <dt class="col-sm-3">Usuario Responsable:</dt>
+            <dd class="col-sm-9">{{ movimiento.usuario_responsable }}</dd>
+        </dl>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <strong>Tramos (Movimientos Hijos)</strong>
+        <a href="{% url 'crear_tramo' movimiento.pk %}" class="btn btn-sm btn-outline-secondary">
+            Añadir Tramo
+        </a>
+    </div>
+
+    <div class="card-body">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID Tramo</th>
+                    <th>Tipo</th>
+                    <th>Origen</th>
+                    <th>Destino</th>
+                    <th>Motorista</th>
+                    <th>Estado</th>
+                    <th>Acciones</th> </tr>
+            </thead>
+            <tbody>
+                {% for tramo in tramos_hijos %}
+                    <tr>
+                        <td>{{ tramo.id_movimiento }}</td>
+                        <td>{{ tramo.tipo_movimiento.nombre }}</td>
+                        <td>{{ tramo.origen }}</td>
+                        <td>{{ tramo.destino }}</td>
+                        <td>{{ tramo.motorista_asignado|default:"N/A" }}</td>
+                        <td>{{ tramo.get_estado_display }}</td>
+                        <td>
+                            <a href="{% url 'tramo_editar' tramo.pk %}" class="btn btn-sm btn-warning">Editar</a>
+                            <a href="{% url 'tramo_eliminar' tramo.pk %}" class="btn btn-sm btn-danger">Eliminar</a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted">Aún no se han registrado tramos para este movimiento.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

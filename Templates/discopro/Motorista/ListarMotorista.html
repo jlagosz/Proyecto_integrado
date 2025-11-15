@@ -1,0 +1,60 @@
+{% extends 'discopro/base.html' %}
+{% block title %}Listado de Motoristas{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="lista-h1">Listado de Motoristas</h1>
+    <a href="{% url 'agregar_motorista' %}" class="btn btn-primary">Registrar Nuevo Motorista</a>
+</div>
+
+<form method="get" class="mb-4">
+    <div class="input-group">
+        <input type="text" class="form-control" name="q" placeholder="Buscar por nombre o RUT..." value="{{ request.GET.q }}">
+        <button class="btn btn-outline-secondary" type="submit">Buscar</button>
+    </div>
+</form>
+
+<table class="table table-striped table-hover">
+    <thead class="table-dark">
+        <tr>
+            <th>Nombre Completo</th>
+            <th>RUT</th>
+            <th>Teléfono</th>
+            <th>Comuna</th>
+            <th>Estado</th> 
+            <th>Farmacia Actual</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for motorista in motoristas %}
+        <tr>
+            <td>{{ motorista.nombres }} {{ motorista.apellido_paterno }}</td>
+            <td>{{ motorista.rut }}</td>
+            <td>{{ motorista.telefono }}</td>
+            <td>{{ motorista.comuna.nombreComuna }}</td>
+            
+            <td>
+                <span class="badge 
+                    {% if motorista.estado == 'activo' %}bg-success
+                    {% elif motorista.estado == 'inactivo' %}bg-secondary
+                    {% else %}bg-warning text-dark{% endif %}">
+                    {{ motorista.get_estado_display }}
+                </span>
+            </td>
+            <td>{{ motorista.farmacia_actual|default:"Sin asignar" }}</td>
+            <td>
+                <a href="{% url 'detalle_motorista' motorista.pk %}" class="btn btn-sm btn-info">Ver</a>
+                <a href="{% url 'motorista_modificar' motorista.pk %}" class="btn btn-sm btn-warning">Editar</a>
+                <a href="{% url 'motorista_eliminar' motorista.pk %}" class="btn btn-sm btn-danger">Eliminar</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="7" class="text-center">No hay motoristas registrados.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<a href="{% url 'index' %}" class="btn btn-secondary mt-4">Volver al Dashboard</a>
+{% endblock %}

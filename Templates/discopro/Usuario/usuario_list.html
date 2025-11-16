@@ -1,0 +1,59 @@
+{% extends 'discopro/base.html' %}
+{% load static %}
+{% block title %}Listado de Usuarios{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="lista-h1">Listado de Usuarios del Sistema</h1>
+    <a href="{% url 'usuario_crear' %}" class="btn btn-primary">Crear Nuevo Usuario</a>
+</div>
+
+<form method="get" class="mb-4">
+    <div class="input-group">
+        <input type="text" class="form-control" name="q" placeholder="Buscar por Nombre, Apellido, RUT o Nombre de Usuario..." value="{{ request.GET.q }}">
+        <button class="btn btn-outline-secondary" type="submit">Buscar</button>
+    </div>
+</form>
+
+<div class="table-responsive">
+    <table class="table table-striped table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Nombre Completo</th>
+                <th>Nombre de Usuario</th>
+                <th>RUT</th>
+                <th>Correo</th>
+                <th>Rol</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for usuario in usuarios %}
+            <tr>
+                <td>{{ usuario.nombres }} {{ usuario.apellidos }}</td>
+                <td>{{ usuario.nombreUsuario }}</td>
+                <td>{{ usuario.rut }}</td>
+                <td>{{ usuario.correo }}</td>
+                <td>{{ usuario.rol.nombreRol }}</td>
+                <td>{{ usuario.estado }}</td>
+                <td>
+                    <a href="{% url 'usuario_editar' usuario.pk %}" class="btn btn-sm btn-warning">Editar</a>
+                    <a href="{% url 'usuario_eliminar' usuario.pk %}" classs="btn btn-sm btn-danger">Eliminar</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" class="text-center">
+                    {% if request.GET.q %}
+                        No se encontraron usuarios que coincidan con "{{ request.GET.q }}".
+                    {% else %}
+                        No hay usuarios registrados.
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

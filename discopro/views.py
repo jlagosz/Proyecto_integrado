@@ -8,14 +8,14 @@ from django import forms
 # Importamos los modelos
 from .models import (
     Farmacia, Motorista, Moto, AsignacionFarmacia, AsignacionMoto, DocumentacionMoto, Mantenimiento,
-    ContactoEmergencia, TipoMovimiento, Movimiento
+    ContactoEmergencia, TipoMovimiento, Movimiento, Usuario, Rol
 )
 
 # Importamos los formularios
 from .forms import (
     FarmaciaForm, MotoristaForm, MotoForm, 
     AsignacionFarmaciaForm, AsignacionMotoForm, DocumentacionMotoForm, MantenimientoForm,
-    ContactoEmergenciaForm, TipoMovimientoForm, MovimientoForm
+    ContactoEmergenciaForm, TipoMovimientoForm, MovimientoForm, UsuarioForm
 )
 
 # --- VISTA PRINCIPAL ---
@@ -30,6 +30,44 @@ def index(request):
         'total_motos': total_motos
     }
     return render(request, "discopro/Main/Index.html", context)
+
+# --- CRUD USUARIOS ---
+
+class UsuarioListView(ListView):
+    model = Usuario
+    template_name = 'discopro/Usuario/usuario_list.html'
+    context_object_name = 'usuarios'
+
+    def get_queryset(self):
+        queryset = super().get_queryset().select_related('rol')
+        query = self.request.GET.get('q')
+        if query:
+            queryset = queryset.filter(
+                Q(nombres__icontains=query) |
+                Q(apellidos__icontains=query) |
+                Q(rut__icontains=query) |
+                Q(nombreUsuario__icontains=query)
+            ).distinct()
+        
+        return queryset.order_by('nombres')
+    
+
+class UsuarioCreateView(CreateView):
+    model = Usuario
+    form_class = UsuarioForm
+    template_name = 'discopro/Usuario/usuario_form.html'
+    success_url = reverse_lazy('usuario_lista')
+
+class UsuarioUpdateView(UpdateView):
+    model = Usuario
+    form_class = UsuarioForm
+    template_name = 'discopro/Usuario/usuario_form.html'
+    success_url = reverse_lazy('usuario_lista')
+
+class UsuarioDeleteView(DeleteView):
+    model = Usuario
+    template_name = 'discopro/confirmar_eliminar.html'
+    success_url = reverse_lazy('usuario_lista')
 
 # --- CRUD FARMACIAS ---
 class FarmaciaListView(ListView):

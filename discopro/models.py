@@ -39,13 +39,23 @@ class Rol(models.Model):
         return self.nombreRol
 
 class Usuario(models.Model):
+    ESTADO_ACTIVO = 'Activo'
+    ESTADO_INACTIVO = 'Inactivo'
+    ESTADO_CHOICES = [
+        (ESTADO_ACTIVO, 'Activo'),
+        (ESTADO_INACTIVO, 'Inactivo'),
+    ]
     idUsuario = models.AutoField(primary_key=True)
     rut = models.CharField(max_length=12, unique=True)
     nombres = models.CharField(max_length=100)
     apellidos = models.CharField(max_length=100)
     correo = models.EmailField(unique=True)
     telefono = models.CharField(max_length=20)
-    estado = models.CharField(max_length=20, default="Activo")
+    estado = models.CharField(
+        max_length=20, 
+        choices=ESTADO_CHOICES,
+        default=ESTADO_ACTIVO
+    )
     rol = models.ForeignKey(Rol, on_delete=models.PROTECT)
 
     # --- CAMPOS DE LOGIN ---

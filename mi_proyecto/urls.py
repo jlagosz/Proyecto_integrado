@@ -10,6 +10,12 @@ urlpatterns = [
     # --- VISTA PRINCIPAL (DASHBOARD) ---
     path('', views.index, name='index'), 
 
+    # --- CRUD USUARIOS ---
+    path('usuarios/', views.UsuarioListView.as_view(), name='usuario_lista'),
+    path('usuarios/crear/', views.UsuarioCreateView.as_view(), name='usuario_crear'),
+    path('usuarios/editar/<int:pk>/', views.UsuarioUpdateView.as_view(), name='usuario_editar'),
+    path('usuarios/eliminar/<int:pk>/', views.UsuarioDeleteView.as_view(), name='usuario_eliminar'),
+
     # --- CRUD FARMACIAS ---
     path('farmacias/', views.FarmaciaListView.as_view(), name='farmacia_lista'), 
     path('farmacias/crear/', views.FarmaciaCreateView.as_view(), name='farmacia_crear'),

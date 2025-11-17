@@ -3,14 +3,33 @@
 {% block title %}{% if form.instance.pk %}Editar Movimiento{% else %}Crear Movimiento{% endif %}{% endblock %}
 
 {% block content %}
-<h1 class="lista-h1">{% if form.instance.pk %}Editar Movimiento #{{ form.instance.pk }}{% else %}Crear Nuevo Movimiento (Padre){% endif %}</h1>
-<hr>
 
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="btn btn-primary mt-3">Guardar Movimiento</button>
-    <a href="{% url 'movimiento_lista' %}" class="btn btn-secondary mt-3">Cancelar</a>
-</form>
+<div class="form-container-center">
+    <div class="form-card">
+        <div class="form-card-header">
+            <h2>
+                <i class="bi bi-arrows-move"></i>
+                {% if form.instance.pk %}Editar Movimiento #{{ form.instance.pk }}{% else %}Nuevo Movimiento (Padre){% endif %}
+            </h2>
+        </div>
+
+        <div class="form-card-body">
+            <form method="post">
+                {% csrf_token %}
+                
+                <p class="text-muted mb-4">Complete los campos para registrar un nuevo movimiento principal (despacho).</p>
+
+                {{ form.as_p }}
+
+                <div class="form-actions">
+                    <a href="{% url 'movimiento_lista' %}" class="btn btn-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Guardar Movimiento
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 {% endblock %}

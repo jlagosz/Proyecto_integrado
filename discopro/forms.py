@@ -2,17 +2,22 @@ from django import forms
 from .models import (
     Farmacia, Motorista, Moto, ContactoEmergencia, 
     AsignacionFarmacia, AsignacionMoto, Documentacion, DocumentacionMoto,
-    Mantenimiento, TipoMovimiento, Movimiento, Usuario, Rol
+    Mantenimiento, TipoMovimiento, Movimiento,
+    Usuario, Rol
 )
 
 # --- WIDGETS NATIVOS ---
 class NativeDateInput(forms.DateInput):
+    """Widget personalizado para renderizar inputs de tipo 'date' de HTML5."""
     input_type = 'date'
     attrs = {'class': 'form-control'} 
 
 class NativeTimeInput(forms.TimeInput):
+    """Widget personalizado para renderizar inputs de tipo 'time' de HTML5."""
     input_type = 'time'
     attrs = {'class': 'form-control'}
+
+# --- FORMULARIOS ---
 
 class FarmaciaForm(forms.ModelForm):
     class Meta:
@@ -23,31 +28,61 @@ class FarmaciaForm(forms.ModelForm):
             'latitud', 'longitud'
         ]
         widgets = {
+            'nombre': forms.TextInput(attrs={'class': 'form-control'}),
+            'direccion': forms.TextInput(attrs={'class': 'form-control'}),
+            'comuna': forms.Select(attrs={'class': 'form-select'}),
+            'telefono': forms.TextInput(attrs={'class': 'form-control'}),
+            'latitud': forms.NumberInput(attrs={'class': 'form-control'}),
+            'longitud': forms.NumberInput(attrs={'class': 'form-control'}),
             'horario_apertura': NativeTimeInput(),
             'horario_cierre': NativeTimeInput(),
         }
+
 class MotoristaForm(forms.ModelForm):
+    """Formulario para la gestión de Motoristas."""
     class Meta:
         model = Motorista
         fields = [
             'rut', 'pasaporte', 'nombres', 'apellido_paterno', 'apellido_materno',
             'fecha_nacimiento', 'direccion', 'comuna', 'telefono', 'correo',
-            'estado',
-            'licencia_conducir', 'fecha_ultimo_control', 'fecha_proximo_control'
+            'estado', 'licencia_conducir', 'fecha_ultimo_control', 'fecha_proximo_control'
         ]
         widgets = {
-            'fecha_nacimiento': NativeDateInput(),
-            'fecha_ultimo_control': NativeDateInput(),
-            'fecha_proximo_control': NativeDateInput(),
+            'rut': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: 12.345.678-9'}),
+            'pasaporte': forms.TextInput(attrs={'class': 'form-control'}),
+            'nombres': forms.TextInput(attrs={'class': 'form-control'}),
+            'apellido_paterno': forms.TextInput(attrs={'class': 'form-control'}),
+            'apellido_materno': forms.TextInput(attrs={'class': 'form-control'}),
+            'direccion': forms.TextInput(attrs={'class': 'form-control'}),
+            'telefono': forms.TextInput(attrs={'class': 'form-control'}),
+            'correo': forms.EmailInput(attrs={'class': 'form-control'}),
+            'comuna': forms.Select(attrs={'class': 'form-select'}),
+            'estado': forms.Select(attrs={'class': 'form-select'}),
+            'licencia_conducir': forms.FileInput(attrs={'class': 'form-control'}),
+            'fecha_nacimiento': NativeDateInput(attrs={'class': 'form-control'}),
+            'fecha_ultimo_control': NativeDateInput(attrs={'class': 'form-control'}),
+            'fecha_proximo_control': NativeDateInput(attrs={'class': 'form-control'}),
         }
+
 class MotoForm(forms.ModelForm):
+    """Formulario para la gestión de Motos."""
     class Meta:
         model = Moto
         fields = [
             'patente', 'marca', 'modelo', 'color', 'anio', 
             'numero_chasis', 'motor'
         ]
+        widgets = {
+            'patente': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'AA-BB-12'}),
+            'marca': forms.TextInput(attrs={'class': 'form-control'}),
+            'modelo': forms.TextInput(attrs={'class': 'form-control'}),
+            'color': forms.TextInput(attrs={'class': 'form-control'}),
+            'anio': forms.NumberInput(attrs={'class': 'form-control'}),
+            'numero_chasis': forms.TextInput(attrs={'class': 'form-control'}),
+            'motor': forms.TextInput(attrs={'class': 'form-control'}),
+        }
 class AsignacionFarmaciaForm(forms.ModelForm):
+    """Formulario para asignar una Farmacia a un Motorista."""
     class Meta:
         model = AsignacionFarmacia
         fields = ['farmacia', 'observaciones']
@@ -55,7 +90,9 @@ class AsignacionFarmaciaForm(forms.ModelForm):
             'farmacia': forms.Select(attrs={'class': 'form-select'}),
             'observaciones': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
+
 class AsignacionMotoForm(forms.ModelForm):
+    """Formulario para asignar una Moto a un Motorista."""
     class Meta:
         model = AsignacionMoto
         fields = ['motorista', 'estado']
@@ -63,15 +100,24 @@ class AsignacionMotoForm(forms.ModelForm):
             'motorista': forms.Select(attrs={'class': 'form-select'}),
             'estado': forms.TextInput(attrs={'class': 'form-control'}),
         }
+
 class ContactoEmergenciaForm(forms.ModelForm):
+    """Formulario para registrar contactos de emergencia."""
     class Meta:
         model = ContactoEmergencia
         fields = ['nombreCompleto', 'parentesco', 'telefono']
+
 class DocumentacionForm(forms.ModelForm):
+    """Formulario para documentos generales del motorista."""
     class Meta:
         model = Documentacion
         fields = ['nombreDocumento', 'archivo', 'fechaVencimiento']
+
 class DocumentacionMotoForm(forms.ModelForm):
+    """
+    Formulario para actualizar los documentos de una moto.
+    Incluye validación de fechas y subida de archivos.
+    """
     class Meta:
         model = DocumentacionMoto
         exclude = ['moto'] 
@@ -84,7 +130,9 @@ class DocumentacionMotoForm(forms.ModelForm):
             'revision_tecnica_file': forms.FileInput(attrs={'class': 'form-control'}),
             'revision_tecnica_vencimiento': NativeDateInput(),
         }
+
 class MantenimientoForm(forms.ModelForm):
+    """Formulario para registrar mantenimientos de vehículos."""
     class Meta:
         model = Mantenimiento
         exclude = ['moto'] 
@@ -97,16 +145,16 @@ class MantenimientoForm(forms.ModelForm):
             'factura': forms.FileInput(attrs={'class': 'form-control'}),
         }
 
-# --- FORMULARIOS DE MOVIMIENTO ---
-
 class TipoMovimientoForm(forms.ModelForm):
+    """Formulario para gestionar los tipos de movimiento."""
     class Meta:
         model = TipoMovimiento
         fields = '__all__'
 
 class MovimientoForm(forms.ModelForm):
     """
-    Formulario para crear/editar un Despacho (Padre) o un Tramo (Hijo).
+    Formulario unificado para crear/editar 'Despachos' (Padres) y 'Tramos' (Hijos).
+    El campo 'movimiento_padre' se oculta dinámicamente según el contexto.
     """
     class Meta:
         model = Movimiento
@@ -133,7 +181,8 @@ class MovimientoForm(forms.ModelForm):
 
 class UsuarioForm(forms.ModelForm):
     """
-    Formulario para crear y actualizar el modelo Usuario.
+    Formulario para la gestión de Usuarios del sistema.
+    Incluye validación y hashing automático de contraseñas.
     """
     contrasena = forms.CharField(
         widget=forms.PasswordInput(attrs={'class': 'form-control'}),
@@ -172,24 +221,18 @@ class UsuarioForm(forms.ModelForm):
             self.fields['contrasena'].help_text = "Ingresa una contraseña segura."
 
     def clean(self):
-        """
-        Valida que las dos contraseñas coincidan.
-        """
+        """Valida que las contraseñas coincidan."""
         cleaned_data = super().clean()
         contrasena = cleaned_data.get("contrasena")
         confirmar_contrasena = cleaned_data.get("confirmar_contrasena")
 
         if contrasena or (not self.instance.pk):
             if contrasena != confirmar_contrasena:
-                raise forms.ValidationError(
-                    "Las contraseñas no coinciden."
-                )
+                raise forms.ValidationError("Las contraseñas no coinciden.")
         return cleaned_data
 
     def save(self, commit=True):
-        """
-        Sobrescribe el método save para hashear la contraseña.
-        """
+        """Intercepta el guardado para encriptar la contraseña."""
         usuario = super().save(commit=False)
         contrasena = self.cleaned_data.get("contrasena")
 
@@ -200,8 +243,8 @@ class UsuarioForm(forms.ModelForm):
             usuario.save()
         return usuario
     
-
 class LoginForm(forms.Form):
+    """Formulario simple para el inicio de sesión."""
     nombreUsuario = forms.CharField(
         label="Nombre de Usuario",
         max_length=100,

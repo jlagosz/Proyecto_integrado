@@ -4,12 +4,13 @@
 {% block title %}Dashboard - DiscoPro{% endblock %}
 
 {% block content %}
-    <h1 class="dashboard-h1">Dashboard</h1>
+    <h1 class="lista-h1">Dashboard</h1>
     <p class="text-muted">Resumen general del estado de la operación.</p>
     
     <div class="card-container">
-        <div class="dashboard-card">
-            <div class="card-icon icon-farmacias">
+        
+        <div class="dashboard-card card-farmacias">
+            <div class="card-icon">
                 <i class="bi bi-store"></i>
             </div>
             <div class="card-info">
@@ -17,8 +18,9 @@
                 <p>{{ total_farmacias }}</p> 
             </div>
         </div>
-         <div class="dashboard-card">
-            <div class="card-icon icon-motoristas">
+         
+        <div class="dashboard-card card-motoristas">
+            <div class="card-icon">
                 <i class="bi bi-person-badge"></i>
             </div>
             <div class="card-info">
@@ -26,8 +28,9 @@
                 <p>{{ total_motoristas }}</p>
             </div>
         </div>
-        <div class="dashboard-card">
-            <div class="card-icon icon-motos">
+
+        <div class="dashboard-card card-motos">
+            <div class="card-icon">
                 <i class="bi bi-speedometer2"></i>
             </div>
             <div class="card-info">
@@ -35,5 +38,6 @@
                 <p>{{ total_motos }}</p>
             </div>
         </div>
+
     </div>
 {% endblock %}

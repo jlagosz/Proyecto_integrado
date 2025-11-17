@@ -1,16 +1,26 @@
 {% extends 'discopro/base.html' %}
-
-{% block title %}Asignar Farmacia a {{ motorista.nombres }}{% endblock %}
+{% load static %}
+{% block title %}Asignar Farmacia{% endblock %}
 
 {% block content %}
-  <h1 class="lista-h1">Asignar Farmacia a {{ motorista }}</h1>
-  <hr>
-  <p>Selecciona la farmacia y añade observaciones para esta nueva asignación.</p>
+<div class="form-container-center">
+    <div class="form-card">
+        <div class="form-card-header">
+            <h2><i class="bi bi-person-check"></i> Asignar Farmacia a {{ motorista.nombres }}</h2>
+        </div>
+        <div class="form-card-body">
+            <form method="post">
+                {% csrf_token %}
+                <p class="text-muted">Selecciona la farmacia y añade observaciones para esta nueva asignación.</p>
+                
+                {{ form.as_p }}
 
-  <form method="post">
-      {% csrf_token %}
-      {{ form.as_p }}
-      <button type="submit" class="btn btn-primary mt-3">Guardar Asignación</button>
-      <a href="{% url 'detalle_motorista' motorista.pk %}" class="btn btn-secondary mt-3">Cancelar</a>
-  </form>
+                <div class="form-actions">
+                    <a href="{% url 'detalle_motorista' motorista.pk %}" class="btn btn-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-primary">Confirmar Asignación</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 {% endblock %}

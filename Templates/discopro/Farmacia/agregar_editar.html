@@ -1,21 +1,108 @@
 {% extends 'discopro/base.html' %}
+{% load static %}
 
 {% block title %}
   {% if form.instance.pk %}Editar Farmacia{% else %}Agregar Farmacia{% endif %}
 {% endblock %}
 
 {% block content %}
-  <h1 class="lista-h1">{% if form.instance.pk %}Editar Farmacia{% else %}Agregar Nueva Farmacia{% endif %}</h1>
-  <hr>
 
-  <form method="post" enctype="multipart/form-data">
-      {% csrf_token %}
-      
-      {{ form.as_p }}
+<div class="form-container-center">
+    <div class="form-card">
+        
+        <div class="form-card-header">
+            <h2>
+                <i class="bi bi-hospital"></i>
+                {% if form.instance.pk %}Editar Farmacia{% else %}Nueva Farmacia{% endif %}
+            </h2>
+        </div>
 
-      <button type="submit" class="btn btn-primary mt-3">
-          {% if form.instance.pk %}Actualizar{% else %}Guardar{% endif %}
-      </button>
-      <a href="{% url 'farmacia_lista' %}" class="btn btn-secondary mt-3">Cancelar</a>
-  </form>
+        <div class="form-card-body">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                {% if form.non_field_errors %}
+                  <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                {% endif %}
+
+                <h5 class="text-muted mb-3 pb-2 border-bottom">Información General</h5>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">{{ form.nombre.label }}</label>
+                        {{ form.nombre.as_widget }}
+                        {% if form.nombre.errors %}<div class="text-danger">{{ form.nombre.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">{{ form.telefono.label }}</label>
+                        {{ form.telefono.as_widget }}
+                        {% if form.telefono.errors %}<div class="text-danger">{{ form.telefono.errors }}</div>{% endif %}
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">{{ form.direccion.label }}</label>
+                        {{ form.direccion.as_widget }}
+                        {% if form.direccion.errors %}<div class="text-danger">{{ form.direccion.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">{{ form.comuna.label }}</label>
+                        {{ form.comuna.as_widget }}
+                        {% if form.comuna.errors %}<div class="text-danger">{{ form.comuna.errors }}</div>{% endif %}
+                    </div>
+                </div>
+
+                <hr class="my-4">
+
+                <h5 class="text-muted mb-3 pb-2 border-bottom">Horarios de Atención</h5>
+
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label class="form-label">{{ form.horario_apertura.label }}</label>
+                    {{ form.horario_apertura.as_widget }}
+                    {% if form.horario_apertura.errors %}<div class="text-danger">{{ form.horario_apertura.errors }}</div>{% endif %}
+                  </div>
+                  <div class="col-md-6 mb-3">
+                    <label class="form-label">{{ form.horario_cierre.label }}</label>
+                    {{ form.horario_cierre.as_widget }}
+                    {% if form.horario_cierre.errors %}<div class="text-danger">{{ form.horario_cierre.errors }}</div>{% endif %}
+                  </div>
+                </div>
+                
+                <hr class="my-4">
+
+                <h5 class="text-muted mb-3 pb-2 border-bottom">Geolocalización</h5>
+
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label class="form-label">{{ form.latitud.label }}</label>
+                    {{ form.latitud.as_widget }}
+                    {% if form.latitud.errors %}<div class="text-danger">{{ form.latitud.errors }}</div>{% endif %}
+                  </div>
+                  <div class="col-md-6 mb-3">
+                    <label class="form-label">{{ form.longitud.label }}</label>
+                    {{ form.longitud.as_widget }}
+                    {% if form.longitud.errors %}<div class="text-danger">{{ form.longitud.errors }}</div>{% endif %}
+                  </div>
+                </div>
+                
+                <div class="form-actions">
+                    <a href="{% url 'farmacia_lista' %}" class="btn btn-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> {% if form.instance.pk %}Actualizar{% else %}Guardar{% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('select').forEach(function(select) {
+            select.classList.add('form-select');
+        });
+    });
+</script>
 {% endblock %}

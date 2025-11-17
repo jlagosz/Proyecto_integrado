@@ -1,21 +1,152 @@
 {% extends 'discopro/base.html' %}
+{% load static %}
 
 {% block title %}
   {% if form.instance.pk %}Editar Motorista{% else %}Agregar Motorista{% endif %}
 {% endblock %}
 
 {% block content %}
-  <h1 class="lista-h1">{% if form.instance.pk %}Editar Motorista{% else %}Agregar Nuevo Motorista{% endif %}</h1>
-  <hr>
+<div class="form-container-center">
+    <div class="form-card">
+        <div class="form-card-header">
+            <h2>
+                <i class="bi bi-person-badge"></i>
+                {% if form.instance.pk %}Editar Motorista: {{ form.instance.nombres }}{% else %}Nuevo Motorista{% endif %}
+            </h2>
+        </div>
 
-  <form method="post" enctype="multipart/form-data">
-      {% csrf_token %}
-      
-      {{ form.as_p }}
+        <div class="form-card-body">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                {% if form.non_field_errors %}
+                  <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                {% endif %}
 
-      <button type="submit" class="btn btn-primary mt-3">
-          {% if form.instance.pk %}Actualizar Motorista{% else %}Guardar Motorista{% endif %}
-      </button>
-      <a href="{% url 'motorista_lista' %}" class="btn btn-secondary mt-3">Cancelar</a>
-  </form>
+                <h5 class="text-muted mb-3 pb-2 border-bottom">Identificación Personal</h5>
+                
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="mb-3">
+                      <label class="form-label">{{ form.rut.label }}</label>
+                      {{ form.rut.as_widget }} {% if form.rut.errors %}<div class="text-danger">{{ form.rut.errors }}</div>{% endif %}
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="mb-3">
+                      <label class="form-label">{{ form.pasaporte.label }}</label>
+                      {{ form.pasaporte.as_widget }}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label">{{ form.nombres.label }}</label>
+                  {{ form.nombres.as_widget }}
+                </div>
+
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="mb-3">
+                      <label class="form-label">{{ form.apellido_paterno.label }}</label>
+                      {{ form.apellido_paterno.as_widget }}
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="mb-3">
+                      <label class="form-label">{{ form.apellido_materno.label }}</label>
+                      {{ form.apellido_materno.as_widget }}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">{{ form.fecha_nacimiento.label }}</label>
+                            {{ form.fecha_nacimiento.as_widget }}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                         <div class="mb-3">
+                            <label class="form-label">{{ form.estado.label }}</label>
+                            {{ form.estado.as_widget }}
+                        </div>
+                    </div>
+                </div>
+
+                <h5 class="text-muted mb-3 mt-4 pb-2 border-bottom">Ubicación y Contacto</h5>
+                
+                <div class="mb-3">
+                  <label class="form-label">{{ form.direccion.label }}</label>
+                  {{ form.direccion.as_widget }}
+                </div>
+
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="mb-3">
+                      <label class="form-label">{{ form.comuna.label }}</label>
+                      {{ form.comuna.as_widget }}
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="mb-3">
+                      <label class="form-label">{{ form.telefono.label }}</label>
+                      {{ form.telefono.as_widget }}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label">{{ form.correo.label }}</label>
+                  {{ form.correo.as_widget }}
+                </div>
+                
+                <h5 class="text-muted mb-3 mt-4 pb-2 border-bottom">Documentación</h5>
+
+                <div class="mb-3">
+                  <label class="form-label">{{ form.licencia_conducir.label }}</label>
+                  <input type="file" name="{{ form.licencia_conducir.name }}" class="form-control" id="{{ form.licencia_conducir.id_for_label }}">
+                  {% if form.licencia_conducir.value %}
+                    <div class="form-text mt-2">
+                        <i class="bi bi-file-earmark-text"></i> Archivo actual: 
+                        <a href="{{ form.licencia_conducir.value.url }}" target="_blank">{{ form.licencia_conducir.value.name }}</a>
+                    </div>
+                  {% endif %}
+                </div>
+
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="mb-3">
+                      <label class="form-label">{{ form.fecha_ultimo_control.label }}</label>
+                      {{ form.fecha_ultimo_control.as_widget }}
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="mb-3">
+                      <label class="form-label">{{ form.fecha_proximo_control.label }}</label>
+                      {{ form.fecha_proximo_control.as_widget }}
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="form-actions">
+                    <a href="{% url 'motorista_lista' %}" class="btn btn-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> {% if form.instance.pk %}Actualizar{% else %}Guardar{% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Script para asegurar que los select tengan la clase correcta
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('select').forEach(function(select) {
+            select.classList.add('form-select');
+        });
+    });
+</script>
 {% endblock %}

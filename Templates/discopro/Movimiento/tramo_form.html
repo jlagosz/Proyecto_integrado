@@ -3,14 +3,35 @@
 {% block title %}{% if form.instance.pk %}Editar Tramo{% else %}Añadir Tramo{% endif %}{% endblock %}
 
 {% block content %}
-<h1 class="lista-h1">{% if form.instance.pk %}Editar Tramo #{{ form.instance.pk }}{% else %}Añadir Tramo al Movimiento #{{ movimiento_padre.id_movimiento }}{% endif %}</h1>
-<hr>
 
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="btn btn-primary mt-3">Guardar Tramo</button>
-    <a href="{% url 'movimiento_detalle' movimiento_padre.pk %}" class="btn btn-secondary mt-3">Cancelar</a>
-</form>
+<div class="form-container-center">
+    <div class="form-card">
+        <div class="form-card-header">
+            <h2>
+                <i class="bi bi-signpost-split"></i>
+                {% if form.instance.pk %}Editar Tramo #{{ form.instance.pk }}{% else %}Añadir Tramo al Movimiento #{{ movimiento_padre.id_movimiento }}{% endif %}
+            </h2>
+        </div>
+
+        <div class="form-card-body">
+            <form method="post">
+                {% csrf_token %}
+                
+                <p class="text-muted mb-4">
+                    Estás añadiendo un "movimiento hijo". Los campos han sido pre-llenados basándose en el movimiento padre.
+                </p>
+
+                {{ form.as_p }}
+
+                <div class="form-actions">
+                    <a href="{% url 'movimiento_detalle' movimiento_padre.pk %}" class="btn btn-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Guardar Tramo
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 {% endblock %}

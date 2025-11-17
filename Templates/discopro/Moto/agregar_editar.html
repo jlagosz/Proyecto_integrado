@@ -1,19 +1,93 @@
 {% extends 'discopro/base.html' %}
+{% load static %}
 
 {% block title %}
   {% if form.instance.pk %}Editar Moto{% else %}Agregar Moto{% endif %}
 {% endblock %}
 
 {% block content %}
-  <h1 class="lista-h1">{% if form.instance.pk %}Editar Moto{% else %}Agregar Nueva Moto{% endif %}</h1>
-  <hr>
 
-  <form method="post">
-      {% csrf_token %}
-      {{ form.as_p }}
-      <button type="submit" class="btn btn-primary mt-3">
-          {% if form.instance.pk %}Actualizar Moto{% else %}Guardar Moto{% endif %}
-      </button>
-      <a href="{% url 'moto_lista' %}" class="btn btn-secondary mt-3">Cancelar</a>
-  </form>
+<div class="form-container-center">
+    <div class="form-card">
+        
+        <div class="form-card-header">
+            <h2>
+                <i class="bi bi-speedometer2"></i>
+                {% if form.instance.pk %}Editar Moto: {{ form.instance.patente }}{% else %}Nueva Moto{% endif %}
+            </h2>
+        </div>
+
+        <div class="form-card-body">
+            <form method="post">
+                {% csrf_token %}
+                
+                {% if form.non_field_errors %}
+                  <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                {% endif %}
+
+                <h5 class="text-muted mb-3 pb-2 border-bottom">Datos del Vehículo</h5>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">{{ form.patente.label }}</label>
+                            {{ form.patente.as_widget }}
+                            {% if form.patente.errors %}<div class="text-danger">{{ form.patente.errors }}</div>{% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">{{ form.anio.label }}</label>
+                            {{ form.anio.as_widget }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">{{ form.marca.label }}</label>
+                            {{ form.marca.as_widget }}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">{{ form.modelo.label }}</label>
+                            {{ form.modelo.as_widget }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">{{ form.color.label }}</label>
+                    {{ form.color.as_widget }}
+                </div>
+
+                <h5 class="text-muted mb-3 mt-4 pb-2 border-bottom">Detalles Técnicos</h5>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">{{ form.numero_chasis.label }}</label>
+                            {{ form.numero_chasis.as_widget }}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">{{ form.motor.label }}</label>
+                            {{ form.motor.as_widget }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <a href="{% url 'moto_lista' %}" class="btn btn-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> {% if form.instance.pk %}Actualizar{% else %}Guardar{% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 {% endblock %}

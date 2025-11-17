@@ -199,3 +199,15 @@ class UsuarioForm(forms.ModelForm):
         if commit:
             usuario.save()
         return usuario
+    
+
+class LoginForm(forms.Form):
+    nombreUsuario = forms.CharField(
+        label="Nombre de Usuario",
+        max_length=100,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'autocomplete': 'username'})
+    )
+    contrasena = forms.CharField(
+        label="Contraseña",
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'autocomplete': 'current-password'})
+    )

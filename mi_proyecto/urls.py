@@ -7,6 +7,10 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('admin/', admin.site.urls),
     
+    # --- VISTA LOGIN ---
+    path('login/', views.login_view, name='login'),
+    path('logout/', views.logout_view, name='logout'),
+
     # --- VISTA PRINCIPAL (DASHBOARD) ---
     path('', views.index, name='index'), 
 

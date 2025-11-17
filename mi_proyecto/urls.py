@@ -7,8 +7,18 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('admin/', admin.site.urls),
     
+    # --- VISTA LOGIN ---
+    path('login/', views.login_view, name='login'),
+    path('logout/', views.logout_view, name='logout'),
+
     # --- VISTA PRINCIPAL (DASHBOARD) ---
     path('', views.index, name='index'), 
+
+    # --- CRUD USUARIOS ---
+    path('usuarios/', views.UsuarioListView.as_view(), name='usuario_lista'),
+    path('usuarios/crear/', views.UsuarioCreateView.as_view(), name='usuario_crear'),
+    path('usuarios/editar/<int:pk>/', views.UsuarioUpdateView.as_view(), name='usuario_editar'),
+    path('usuarios/eliminar/<int:pk>/', views.UsuarioDeleteView.as_view(), name='usuario_eliminar'),
 
     # --- CRUD FARMACIAS ---
     path('farmacias/', views.FarmaciaListView.as_view(), name='farmacia_lista'), 

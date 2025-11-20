@@ -90,7 +90,7 @@ class TipoMovimientoAdmin(admin.ModelAdmin):
 @admin.register(models.Movimiento)
 class MovimientoAdmin(admin.ModelAdmin):
     """Gestión centralizada de Despachos y Tramos."""
-    list_display = ('id_movimiento', 'get_tipo_movimiento', 'estado', 'fecha_movimiento', 'usuario_responsable', 'motorista_asignado', 'get_despacho_padre')
+    list_display = ('numero_despacho', 'id_movimiento', 'get_tipo_movimiento', 'estado', 'fecha_movimiento', 'usuario_responsable', 'motorista_asignado', 'get_despacho_padre')
     list_filter = ('estado', 'tipo_movimiento', 'fecha_movimiento')
     search_fields = ('id_movimiento', 'observacion', 'origen', 'destino')
     list_per_page = 20

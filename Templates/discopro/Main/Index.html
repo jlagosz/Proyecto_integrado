@@ -11,7 +11,7 @@
         
         <div class="dashboard-card card-farmacias">
             <div class="card-icon">
-                <i class="bi bi-store"></i>
+                <i class="bi bi-hospital"></i>
             </div>
             <div class="card-info">
                 <h3>Farmacias Activas</h3>
@@ -36,6 +36,26 @@
             <div class="card-info">
                 <h3>Motos en Flota</h3>
                 <p>{{ total_motos }}</p>
+            </div>
+        </div>
+
+        <div class="dashboard-card" style="border-left-color: #2ecc71;">
+            <div class="card-icon" style="color: #2ecc71; background-color: rgba(46, 204, 113, 0.15);">
+                <i class="bi bi-people-fill"></i>
+            </div>
+            <div class="card-info">
+                <h3>Usuarios Sistema</h3>
+                <p>{{ total_usuarios }}</p>
+            </div>
+        </div>
+
+        <div class="dashboard-card" style="border-left-color: #9b59b6;">
+            <div class="card-icon" style="color: #9b59b6; background-color: rgba(155, 89, 182, 0.15);">
+                <i class="bi bi-box-seam"></i>
+            </div>
+            <div class="card-info">
+                <h3>Total de Movimientos</h3>
+                <p>{{ total_movimientos }}</p>
             </div>
         </div>
 

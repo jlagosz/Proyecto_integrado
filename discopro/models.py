@@ -230,8 +230,8 @@ class TipoMovimiento(models.Model):
 class Movimiento(models.Model):
     """
     Implementa la lógica de "movimientos anidados" (padre/hijo).
-    Un "Movimiento Padre" (con 'movimiento_padre' en Nulo) es un "Despacho".
-    Un "Movimiento Hijo" (con 'movimiento_padre' apuntando al padre) es un "Tramo".
+    Un "Movimiento Padre" es un "Despacho" (identificado por numero_despacho).
+    Un "Movimiento Hijo" es un "Tramo".
     """
     ESTADO_CHOICES = (
         ('pendiente', 'Pendiente'),
@@ -239,8 +239,16 @@ class Movimiento(models.Model):
         ('anulado', 'Anulado'),
     )
 
-    id_movimiento = models.AutoField(primary_key=True, verbose_name="Identificador único")
+    id_movimiento = models.AutoField(primary_key=True, verbose_name="Identificador Interno")
     
+    numero_despacho = models.CharField(
+        max_length=50, 
+        unique=True, 
+        null=True,
+        blank=True,
+        verbose_name="Número de Despacho (Cruz Verde)"
+    )
+
     tipo_movimiento = models.ForeignKey(
         TipoMovimiento, 
         on_delete=models.PROTECT, 
@@ -249,19 +257,19 @@ class Movimiento(models.Model):
     
     fecha_movimiento = models.DateTimeField(
         default=timezone.now, 
-        verbose_name="Fecha y hora del movimiento"
+        verbose_name="Fecha y hora"
     )
     
     usuario_responsable = models.ForeignKey(
         Usuario, 
         on_delete=models.PROTECT, 
-        verbose_name="Usuario Responsable (Operador)"
+        verbose_name="Usuario Responsable"
     )
     
     observacion = models.TextField(
         blank=True, 
         null=True, 
-        verbose_name="Descripción / Observación"
+        verbose_name="Observación"
     )
     
     estado = models.CharField(
@@ -271,15 +279,8 @@ class Movimiento(models.Model):
         verbose_name="Estado"
     )
     
-    origen = models.CharField(
-        max_length=255, 
-        verbose_name="Origen (Bodega/sector que entrega)"
-    )
-    
-    destino = models.CharField(
-        max_length=255, 
-        verbose_name="Destino (Bodega/sector que recibe)"
-    )
+    origen = models.CharField(max_length=255, verbose_name="Origen")
+    destino = models.CharField(max_length=255, verbose_name="Destino")
     
     motorista_asignado = models.ForeignKey(
         Motorista, 
@@ -295,7 +296,7 @@ class Movimiento(models.Model):
         null=True, 
         blank=True, 
         related_name='tramos_hijos', 
-        verbose_name="Movimiento Padre (Despacho)"
+        verbose_name="Movimiento Padre"
     )
 
     class Meta:
@@ -304,9 +305,11 @@ class Movimiento(models.Model):
 
     def __str__(self):
         if self.movimiento_padre:
-            return f"Tramo (Hijo) {self.id_movimiento} del Despacho {self.movimiento_padre.id_movimiento}"
+            # Si es hijo, mostramos a qué despacho pertenece
+            return f"Tramo del Despacho #{self.movimiento_padre.numero_despacho}"
         else:
-            return f"Despacho (Padre) {self.id_movimiento}: {self.origen} -> {self.destino}"
+            # Si es padre, mostramos su número oficial
+            return f"Despacho #{self.numero_despacho}"
 
     def get_absolute_url(self):
         if self.movimiento_padre:

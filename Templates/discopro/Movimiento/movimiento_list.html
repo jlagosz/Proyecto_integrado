@@ -18,7 +18,7 @@
 <table class="table table-striped table-hover">
     <thead class="table-dark">
         <tr>
-            <th>ID Mov.</th>
+            <th>N° Despacho</th>
             <th>Tipo</th>
             <th>Origen</th>
             <th>Destino Final</th>
@@ -30,7 +30,7 @@
     <tbody>
         {% for movimiento in movimientos %}
         <tr>
-            <td>{{ movimiento.id_movimiento }}</td>
+            <td><strong>{{ movimiento.numero_despacho }}</strong></td>
             <td>{{ movimiento.tipo_movimiento.nombre }}</td>
             <td>{{ movimiento.origen }}</td>
             <td>{{ movimiento.destino }}</td>

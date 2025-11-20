@@ -152,18 +152,18 @@ class TipoMovimientoForm(forms.ModelForm):
         fields = '__all__'
 
 class MovimientoForm(forms.ModelForm):
-    """
-    Formulario unificado para crear/editar 'Despachos' (Padres) y 'Tramos' (Hijos).
-    El campo 'movimiento_padre' se oculta dinámicamente según el contexto.
-    """
     class Meta:
         model = Movimiento
         fields = [
+            'numero_despacho',
+            'fecha_movimiento',
             'tipo_movimiento', 'usuario_responsable', 'motorista_asignado',
             'observacion', 'estado', 'origen', 'destino', 
             'movimiento_padre'
         ]
         widgets = {
+            'numero_despacho': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: 12345678'}),
+            'fecha_movimiento': forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}),
             'tipo_movimiento': forms.Select(attrs={'class': 'form-select'}),
             'usuario_responsable': forms.Select(attrs={'class': 'form-select'}),
             'motorista_asignado': forms.Select(attrs={'class': 'form-select'}),
@@ -171,13 +171,21 @@ class MovimientoForm(forms.ModelForm):
             'estado': forms.Select(attrs={'class': 'form-select'}),
             'origen': forms.TextInput(attrs={'class': 'form-control'}),
             'destino': forms.TextInput(attrs={'class': 'form-control'}),
-            'movimiento_padre': forms.Select(attrs={'class': 'form-select'}),
+            'movimiento_padre': forms.HiddenInput(),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['movimiento_padre'].required = False
         self.fields['motorista_asignado'].required = False
+        
+        if self.initial.get('movimiento_padre'):
+            # Es un hijo: Ocultamos numero_despacho, no lo necesitamos
+            self.fields['numero_despacho'].widget = forms.HiddenInput()
+            self.fields['numero_despacho'].required = False
+        else:
+            # Es un padre: Es obligatorio
+            self.fields['numero_despacho'].required = True
 
 class UsuarioForm(forms.ModelForm):
     """
@@ -245,10 +253,10 @@ class UsuarioForm(forms.ModelForm):
     
 class LoginForm(forms.Form):
     """Formulario simple para el inicio de sesión."""
-    nombreUsuario = forms.CharField(
-        label="Nombre de Usuario",
-        max_length=100,
-        widget=forms.TextInput(attrs={'class': 'form-control', 'autocomplete': 'username'})
+    credencial = forms.CharField(
+        label="Usuario o Correo",
+        max_length=254,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombre de usuario o email', 'autocomplete': 'username'})
     )
     contrasena = forms.CharField(
         label="Contraseña",

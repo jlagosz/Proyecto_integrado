@@ -1,4 +1,3 @@
-
 # Proyecto de Gestión "DiscoPro"
 
 Sistema de gestión logística para la administración de farmacias, motoristas y despachos, construido con Django.

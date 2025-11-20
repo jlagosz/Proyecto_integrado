@@ -39,7 +39,6 @@ class LoginRequiredMixin:
         try:
             request.usuario = Usuario.objects.get(pk=request.session.get('usuario_id'))
         except Usuario.DoesNotExist:
-            # Si el usuario fue eliminado de la BD, limpiamos la sesión
             del request.session['usuario_id']
             messages.error(request, "Tu sesión ha expirado. Por favor, inicia sesión de nuevo.")
             return redirect('login')
@@ -47,7 +46,6 @@ class LoginRequiredMixin:
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
-        # Inyecta el usuario logueado en el contexto de la plantilla
         context = super().get_context_data(**kwargs)
         context['usuario_logueado'] = self.request.usuario
         return context
@@ -74,11 +72,15 @@ def index(request: HttpRequest):
     total_farmacias = Farmacia.objects.count()
     total_motoristas = Motorista.objects.count()
     total_motos = Moto.objects.count()
-    
+    total_usuarios = Usuario.objects.count()
+    total_movimientos = Movimiento.objects.filter(movimiento_padre__isnull=True).count()
+
     context = {
         'total_farmacias': total_farmacias,
         'total_motoristas': total_motoristas,
         'total_motos': total_motos,
+        'total_usuarios': total_usuarios,       
+        'total_movimientos': total_movimientos,
         'usuario_logueado': usuario
     }
     return render(request, "discopro/Main/Index.html", context)
@@ -91,7 +93,6 @@ class UsuarioListView(LoginRequiredMixin, ListView):
     context_object_name = 'usuarios'
 
     def get_queryset(self):
-        # Optimizamos con select_related para evitar N+1 queries
         queryset = super().get_queryset().select_related('rol')
         query = self.request.GET.get('q')
         if query:
@@ -137,7 +138,6 @@ class FarmaciaListView(LoginRequiredMixin, ListView):
     context_object_name = 'farmacias'
 
     def get_queryset(self):
-        # Optimizamos trayendo la cadena completa de ubicación
         queryset = super().get_queryset().select_related('comuna__provincia__region')
         query = self.request.GET.get('q')
         if query:
@@ -198,7 +198,6 @@ class MotoristaListView(LoginRequiredMixin, ListView):
         queryset = super().get_queryset().select_related('comuna')
         query = self.request.GET.get('q')
 
-        # CORRECCIÓN AQUÍ: Usamos '-idAsignacionFarmacia' en lugar de '-id'
         latest_farmacia = AsignacionFarmacia.objects.filter(
             motorista=OuterRef('pk')
         ).order_by('-fechaAsignacion', '-idAsignacionFarmacia').values('farmacia__nombre')[:1]
@@ -224,7 +223,6 @@ class MotoristaDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         motorista = self.get_object()
-        # Carga de datos relacionados optimizada
         context['asignaciones_farmacia'] = AsignacionFarmacia.objects.filter(
             motorista=motorista
         ).select_related('farmacia').order_by('-fechaAsignacion')
@@ -270,7 +268,6 @@ class MotoListView(LoginRequiredMixin, ListView):
         queryset = super().get_queryset()
         query = self.request.GET.get('q')
         
-        # CORRECCIÓN AQUÍ: Usamos '-idAsignacionMoto' en lugar de '-id'
         latest_motorista = AsignacionMoto.objects.filter(
             moto=OuterRef('pk')
         ).order_by('-fechaAsignacion', '-idAsignacionMoto').values('motorista__nombres')[:1]
@@ -371,7 +368,6 @@ class DocumentacionMotoUpdateView(LoginRequiredMixin, SuccessMessageMixin, Updat
     success_message = "Documentación actualizada correctamente."
 
     def get_object(self, queryset=None):
-        # Busca o crea la documentación si no existe (OneToOne)
         moto_patente = self.kwargs.get('pk') 
         documentacion, created = DocumentacionMoto.objects.get_or_create(
             moto_id=moto_patente, 
@@ -435,11 +431,11 @@ class MovimientoListView(LoginRequiredMixin, ListView):
     context_object_name = 'movimientos'
     
     def get_queryset(self):
-        # Filtramos solo los movimientos padre (sin movimiento_padre)
         queryset = super().get_queryset().filter(movimiento_padre__isnull=True).order_by('-fecha_movimiento')
         query = self.request.GET.get('q')
         if query:
             queryset = queryset.filter(
+                Q(numero_despacho__icontains=query) |
                 Q(id_movimiento__icontains=query) |
                 Q(origen__icontains=query) |
                 Q(destino__icontains=query) |
@@ -458,7 +454,7 @@ class MovimientoDetailView(LoginRequiredMixin, DetailView):
         context['tramos_hijos'] = Movimiento.objects.filter(movimiento_padre=self.object).order_by('fecha_movimiento')
         return context
 
-class MovimientoCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+class MovimientoCreateView(SuccessMessageMixin, CreateView):
     """Crea un Movimiento Padre (Despacho)."""
     model = Movimiento
     form_class = MovimientoForm
@@ -527,7 +523,6 @@ class TramoCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
         return context
 
     def get_initial(self):
-        # --- LÓGICA DE PRE-LLENADO ---
         initial = super().get_initial()
         padre = self.get_movimiento_padre()
         tramos_previos = Movimiento.objects.filter(movimiento_padre=padre).order_by('fecha_movimiento')
@@ -583,8 +578,7 @@ class TramoDeleteView(LoginRequiredMixin, DeleteView):
 
 def login_view(request: HttpRequest):
     """
-    Vista de inicio de sesión personalizada.
-    Valida las credenciales contra el modelo Usuario.
+    Maneja el inicio de sesión del usuario (Email o Username).
     """
     if request.session.get('usuario_id'):
         return redirect('index')
@@ -592,27 +586,31 @@ def login_view(request: HttpRequest):
     if request.method == 'POST':
         form = LoginForm(request.POST)
         if form.is_valid():
-            nombreUsuario = form.cleaned_data['nombreUsuario']
+            credencial = form.cleaned_data['credencial']
             contrasena = form.cleaned_data['contrasena']
             
             try:
-                usuario = Usuario.objects.get(nombreUsuario=nombreUsuario)
+                usuario = Usuario.objects.get(
+                    Q(nombreUsuario=credencial) | Q(correo=credencial)
+                )
             except Usuario.DoesNotExist:
                 usuario = None
+            except Usuario.MultipleObjectsReturned:
+                usuario = Usuario.objects.filter(
+                    Q(nombreUsuario=credencial) | Q(correo=credencial)
+                ).first()
 
             if usuario is not None and usuario.check_password(contrasena):
-                # Autenticación exitosa
                 request.session['usuario_id'] = usuario.idUsuario
                 request.session['usuario_nombre'] = f"{usuario.nombres} {usuario.apellidos}"
                 messages.success(request, f"¡Bienvenido, {usuario.nombres}!")
                 return redirect('index')
             else:
-                messages.error(request, 'Nombre de usuario o contraseña incorrectos.')
+                messages.error(request, 'Usuario/Correo o contraseña incorrectos.')
     else:
         form = LoginForm()
 
     return render(request, 'discopro/login.html', {'form': form})
-
 
 def logout_view(request: HttpRequest):
     """Cierra la sesión del usuario y limpia la data de sesión."""

@@ -50,6 +50,7 @@
             <thead>
                 <tr>
                     <th>ID Tramo</th>
+                    <th>Fecha/Hora</th> 
                     <th>Tipo</th>
                     <th>Origen</th>
                     <th>Destino</th>
@@ -61,6 +62,7 @@
                 {% for tramo in tramos_hijos %}
                     <tr>
                         <td>{{ tramo.id_movimiento }}</td>
+                        <td>{{ tramo.fecha_movimiento|date:"d-m-Y H:i" }}</td>
                         <td>{{ tramo.tipo_movimiento.nombre }}</td>
                         <td>{{ tramo.origen }}</td>
                         <td>{{ tramo.destino }}</td>

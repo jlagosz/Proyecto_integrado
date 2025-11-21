@@ -422,7 +422,18 @@ class ContactoEmergenciaCreateView(LoginRequiredMixin, SuccessMessageMixin, Crea
 
     def get_success_url(self):
         return reverse_lazy('detalle_motorista', kwargs={'pk': self.kwargs['motorista_pk']})
+
+class ContactoEmergenciaDeleteView(LoginRequiredMixin, DeleteView):
+    model = ContactoEmergencia
+    template_name = 'discopro/confirmar_eliminar.html'
     
+    def get_success_url(self):
+        return reverse_lazy('detalle_motorista', kwargs={'pk': self.object.motorista.pk})
+    
+    def form_valid(self, form):
+        messages.success(self.request, "Contacto eliminado exitosamente.")
+        return super().form_valid(form)
+
 # --- CRUD MOVIMIENTOS ---
 class MovimientoListView(LoginRequiredMixin, ListView):
     """Lista los movimientos principales (Despachos)."""

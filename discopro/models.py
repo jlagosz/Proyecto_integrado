@@ -107,21 +107,23 @@ class Motorista(models.Model):
     comuna = models.ForeignKey(Comuna, on_delete=models.PROTECT)
     telefono = models.CharField(max_length=20)
     correo = models.EmailField()
+    incluye_moto_personal = models.BooleanField(default=False, verbose_name="¿Tiene Moto Personal?")
     licencia_conducir = models.FileField(upload_to="licencias/", null=True, blank=True)
     fecha_ultimo_control = models.DateField(null=True, blank=True)
     fecha_proximo_control = models.DateField(null=True, blank=True)
-    estado = models.CharField(
-        max_length=20,
-        choices=ESTADO_CHOICES,
-        default=ESTADO_ACTIVO,
-        verbose_name="Estado"
-    )
+    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default=ESTADO_ACTIVO, verbose_name="Estado")
     def __str__(self):
         return f"{self.nombres} {self.apellido_paterno}"
     def get_absolute_url(self): 
         return reverse('detalle_motorista', kwargs={'pk': self.pk})
 
 class Moto(models.Model):
+    PROPIETARIO_EMPRESA = 'Empresa'
+    PROPIETARIO_MOTORISTA = 'Motorista'
+    PROPIETARIO_CHOICES = [
+        (PROPIETARIO_EMPRESA, 'Empresa'),
+        (PROPIETARIO_MOTORISTA, 'Motorista'),
+    ]
     patente = models.CharField(max_length=15, primary_key=True)
     marca = models.CharField(max_length=50)
     modelo = models.CharField(max_length=50)
@@ -129,6 +131,7 @@ class Moto(models.Model):
     anio = models.IntegerField(verbose_name="Año")
     numero_chasis = models.CharField(max_length=50, blank=True, null=True)
     motor = models.CharField(max_length=50, blank=True, null=True)
+    propietario = models.CharField(max_length=20, choices=PROPIETARIO_CHOICES, default=PROPIETARIO_EMPRESA, verbose_name="Propietario")
     def __str__(self):
         return f"{self.patente} - {self.marca} {self.modelo}"
     def get_absolute_url(self): 
@@ -187,6 +190,7 @@ class Mantenimiento(models.Model):
     taller = models.CharField(max_length=100, blank=True, null=True, verbose_name="Taller")
     kilometraje = models.IntegerField(null=True, blank=True, verbose_name="Kilometraje")
     factura = models.FileField(upload_to="mantenimientos/", null=True, blank=True, verbose_name="Factura/Comprobante")
+    fecha_registro = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de Registro")
 
     def __str__(self): return f"Mantenimiento {self.moto.patente} - {self.fecha_mantenimiento.strftime('%d-%m-%Y')}"
     def get_absolute_url(self): return reverse('detalle_moto', kwargs={'pk': self.moto.patente})
@@ -195,7 +199,7 @@ class AsignacionFarmacia(models.Model):
     idAsignacionFarmacia = models.AutoField(primary_key=True)
     motorista = models.ForeignKey(Motorista, on_delete=models.CASCADE)
     farmacia = models.ForeignKey(Farmacia, on_delete=models.CASCADE)
-    fechaAsignacion = models.DateField(default=timezone.now)
+    fechaAsignacion = models.DateTimeField(default=timezone.now)
     observaciones = models.TextField(blank=True, null=True)
     fechaTermino = models.DateField(null=True, blank=True)
 
@@ -206,8 +210,8 @@ class AsignacionMoto(models.Model):
     idAsignacionMoto = models.AutoField(primary_key=True)
     motorista = models.ForeignKey(Motorista, on_delete=models.SET_NULL, null=True, blank=True)
     moto = models.ForeignKey(Moto, on_delete=models.CASCADE)
-    fechaAsignacion = models.DateField(default=timezone.now)
-    estado = models.CharField(max_length=50, default="Asignada") # Ej: Asignada, En Taller, etc.
+    fechaAsignacion = models.DateTimeField(default=timezone.now)
+    estado = models.CharField(max_length=50, default="Asignada")
     fechaTermino = models.DateField(null=True, blank=True)
 
     def __str__(self):

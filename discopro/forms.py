@@ -10,13 +10,23 @@ from .models import (
 class NativeDateInput(forms.DateInput):
     """Widget personalizado para renderizar inputs de tipo 'date' de HTML5."""
     input_type = 'date'
-    attrs = {'class': 'form-control'} 
+    def __init__(self, attrs=None, format='%Y-%m-%d'):
+        super().__init__(attrs, format=format)
+        self.attrs['class'] = 'form-control'
+
 
 class NativeTimeInput(forms.TimeInput):
     """Widget personalizado para renderizar inputs de tipo 'time' de HTML5."""
     input_type = 'time'
-    attrs = {'class': 'form-control'}
+    def __init__(self, attrs=None, format='%H:%M'):
+        super().__init__(attrs, format=format)
+        self.attrs['class'] = 'form-control'
 
+class NativeDateTimeInput(forms.DateTimeInput):
+    input_type = 'datetime-local'
+    def __init__(self, attrs=None, format='%Y-%m-%dT%H:%M'):
+        super().__init__(attrs, format=format)
+        self.attrs['class'] = 'form-control'
 # --- FORMULARIOS ---
 
 class FarmaciaForm(forms.ModelForm):
@@ -43,9 +53,12 @@ class MotoristaForm(forms.ModelForm):
     class Meta:
         model = Motorista
         fields = [
+            'codigo',
             'rut', 'pasaporte', 'nombres', 'apellido_paterno', 'apellido_materno',
             'fecha_nacimiento', 'direccion', 'comuna', 'telefono', 'correo',
-            'estado', 'licencia_conducir', 'fecha_ultimo_control', 'fecha_proximo_control'
+            'incluye_moto_personal',
+            'estado',
+            'licencia_conducir', 'fecha_ultimo_control', 'fecha_proximo_control'
         ]
         widgets = {
             'rut': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: 12.345.678-9'}),
@@ -58,6 +71,7 @@ class MotoristaForm(forms.ModelForm):
             'correo': forms.EmailInput(attrs={'class': 'form-control'}),
             'comuna': forms.Select(attrs={'class': 'form-select'}),
             'estado': forms.Select(attrs={'class': 'form-select'}),
+            'incluye_moto_personal': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'licencia_conducir': forms.FileInput(attrs={'class': 'form-control'}),
             'fecha_nacimiento': NativeDateInput(attrs={'class': 'form-control'}),
             'fecha_ultimo_control': NativeDateInput(attrs={'class': 'form-control'}),
@@ -70,7 +84,7 @@ class MotoForm(forms.ModelForm):
         model = Moto
         fields = [
             'patente', 'marca', 'modelo', 'color', 'anio', 
-            'numero_chasis', 'motor'
+            'numero_chasis', 'motor', 'propietario'
         ]
         widgets = {
             'patente': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'AA-BB-12'}),
@@ -80,6 +94,7 @@ class MotoForm(forms.ModelForm):
             'anio': forms.NumberInput(attrs={'class': 'form-control'}),
             'numero_chasis': forms.TextInput(attrs={'class': 'form-control'}),
             'motor': forms.TextInput(attrs={'class': 'form-control'}),
+            'propietario': forms.Select(attrs={'class': 'form-select'}),
         }
 class AsignacionFarmaciaForm(forms.ModelForm):
     """Formulario para asignar una Farmacia a un Motorista."""
@@ -163,7 +178,7 @@ class MovimientoForm(forms.ModelForm):
         ]
         widgets = {
             'numero_despacho': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: 12345678'}),
-            'fecha_movimiento': forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}),
+            'fecha_movimiento': NativeDateTimeInput(),
             'tipo_movimiento': forms.Select(attrs={'class': 'form-select'}),
             'usuario_responsable': forms.Select(attrs={'class': 'form-select'}),
             'motorista_asignado': forms.Select(attrs={'class': 'form-select'}),

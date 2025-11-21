@@ -6,8 +6,10 @@
 {% endblock %}
 
 {% block content %}
+
 <div class="form-container-center">
     <div class="form-card">
+        
         <div class="form-card-header">
             <h2>
                 <i class="bi bi-person-badge"></i>
@@ -29,13 +31,15 @@
                   <div class="col-md-6">
                     <div class="mb-3">
                       <label class="form-label">{{ form.rut.label }}</label>
-                      {{ form.rut.as_widget }} {% if form.rut.errors %}<div class="text-danger">{{ form.rut.errors }}</div>{% endif %}
+                      {{ form.rut.as_widget }}
+                      {% if form.rut.errors %}<div class="text-danger">{{ form.rut.errors }}</div>{% endif %}
                     </div>
                   </div>
                   <div class="col-md-6">
                     <div class="mb-3">
                       <label class="form-label">{{ form.pasaporte.label }}</label>
                       {{ form.pasaporte.as_widget }}
+                      {% if form.pasaporte.errors %}<div class="text-danger">{{ form.pasaporte.errors }}</div>{% endif %}
                     </div>
                   </div>
                 </div>
@@ -43,6 +47,7 @@
                 <div class="mb-3">
                   <label class="form-label">{{ form.nombres.label }}</label>
                   {{ form.nombres.as_widget }}
+                  {% if form.nombres.errors %}<div class="text-danger">{{ form.nombres.errors }}</div>{% endif %}
                 </div>
 
                 <div class="row">
@@ -50,12 +55,14 @@
                     <div class="mb-3">
                       <label class="form-label">{{ form.apellido_paterno.label }}</label>
                       {{ form.apellido_paterno.as_widget }}
+                      {% if form.apellido_paterno.errors %}<div class="text-danger">{{ form.apellido_paterno.errors }}</div>{% endif %}
                     </div>
                   </div>
                   <div class="col-md-6">
                     <div class="mb-3">
                       <label class="form-label">{{ form.apellido_materno.label }}</label>
                       {{ form.apellido_materno.as_widget }}
+                      {% if form.apellido_materno.errors %}<div class="text-danger">{{ form.apellido_materno.errors }}</div>{% endif %}
                     </div>
                   </div>
                 </div>
@@ -65,12 +72,14 @@
                         <div class="mb-3">
                             <label class="form-label">{{ form.fecha_nacimiento.label }}</label>
                             {{ form.fecha_nacimiento.as_widget }}
+                            {% if form.fecha_nacimiento.errors %}<div class="text-danger">{{ form.fecha_nacimiento.errors }}</div>{% endif %}
                         </div>
                     </div>
                     <div class="col-md-6">
                          <div class="mb-3">
                             <label class="form-label">{{ form.estado.label }}</label>
                             {{ form.estado.as_widget }}
+                            {% if form.estado.errors %}<div class="text-danger">{{ form.estado.errors }}</div>{% endif %}
                         </div>
                     </div>
                 </div>
@@ -80,6 +89,7 @@
                 <div class="mb-3">
                   <label class="form-label">{{ form.direccion.label }}</label>
                   {{ form.direccion.as_widget }}
+                  {% if form.direccion.errors %}<div class="text-danger">{{ form.direccion.errors }}</div>{% endif %}
                 </div>
 
                 <div class="row">
@@ -87,12 +97,14 @@
                     <div class="mb-3">
                       <label class="form-label">{{ form.comuna.label }}</label>
                       {{ form.comuna.as_widget }}
+                      {% if form.comuna.errors %}<div class="text-danger">{{ form.comuna.errors }}</div>{% endif %}
                     </div>
                   </div>
                   <div class="col-md-6">
                     <div class="mb-3">
                       <label class="form-label">{{ form.telefono.label }}</label>
                       {{ form.telefono.as_widget }}
+                      {% if form.telefono.errors %}<div class="text-danger">{{ form.telefono.errors }}</div>{% endif %}
                     </div>
                   </div>
                 </div>
@@ -100,6 +112,14 @@
                 <div class="mb-3">
                   <label class="form-label">{{ form.correo.label }}</label>
                   {{ form.correo.as_widget }}
+                  {% if form.correo.errors %}<div class="text-danger">{{ form.correo.errors }}</div>{% endif %}
+                </div>
+
+                <div class="mb-3 form-check">
+                    {{ form.incluye_moto_personal }}
+                    <label class="form-check-label" for="{{ form.incluye_moto_personal.id_for_label }}">
+                        {{ form.incluye_moto_personal.label }}
+                    </label>
                 </div>
                 
                 <h5 class="text-muted mb-3 mt-4 pb-2 border-bottom">Documentación</h5>
@@ -113,6 +133,7 @@
                         <a href="{{ form.licencia_conducir.value.url }}" target="_blank">{{ form.licencia_conducir.value.name }}</a>
                     </div>
                   {% endif %}
+                  {% if form.licencia_conducir.errors %}<div class="text-danger">{{ form.licencia_conducir.errors }}</div>{% endif %}
                 </div>
 
                 <div class="row">
@@ -120,12 +141,14 @@
                     <div class="mb-3">
                       <label class="form-label">{{ form.fecha_ultimo_control.label }}</label>
                       {{ form.fecha_ultimo_control.as_widget }}
+                      {% if form.fecha_ultimo_control.errors %}<div class="text-danger">{{ form.fecha_ultimo_control.errors }}</div>{% endif %}
                     </div>
                   </div>
                   <div class="col-md-6">
                     <div class="mb-3">
                       <label class="form-label">{{ form.fecha_proximo_control.label }}</label>
                       {{ form.fecha_proximo_control.as_widget }}
+                      {% if form.fecha_proximo_control.errors %}<div class="text-danger">{{ form.fecha_proximo_control.errors }}</div>{% endif %}
                     </div>
                   </div>
                 </div>
@@ -142,10 +165,14 @@
 </div>
 
 <script>
-    // Script para asegurar que los select tengan la clase correcta
     document.addEventListener('DOMContentLoaded', function() {
+        // Asegura estilos en selects
         document.querySelectorAll('select').forEach(function(select) {
             select.classList.add('form-select');
+        });
+        // Asegura estilos en inputs de texto (por si forms.py no cargó)
+        document.querySelectorAll('input[type="text"], input[type="email"]').forEach(function(input) {
+            input.classList.add('form-control');
         });
     });
 </script>

@@ -1,6 +1,5 @@
 {% extends 'discopro/base.html' %}
 {% load static %}
-{% load i18n %}
 
 {% block title %}Detalle de la Moto{% endblock %}
 
@@ -22,62 +21,86 @@
             <div class="card-header"><strong>Datos del Vehículo</strong></div>
             <div class="card-body">
                 <dl class="row">
-                    <dt class="col-sm-4">Patente</dt>
-                    <dd class="col-sm-8">{{ moto.patente }}</dd>
-                    <dt class="col-sm-4">Marca</dt>
-                    <dd class="col-sm-8">{{ moto.marca }}</dd>
-                    <dt class="col-sm-4">Modelo</dt>
-                    <dd class="col-sm-8">{{ moto.modelo }}</dd>
-                    <dt class="col-sm-4">Año</dt>
-                    <dd class="col-sm-8">{{ moto.anio }}</dd>
-                    <dt class="col-sm-4">N° Chasis</dt>
-                    <dd class="col-sm-8">{{ moto.numero_chasis|default:"N/A" }}</dd>
-                    <dt class="col-sm-4">Motor</dt>
-                    <dd class="col-sm-8">{{ moto.motor|default:"N/A" }}</dd>
+                    <dt class="col-sm-5">Patente</dt>
+                    <dd class="col-sm-7">{{ moto.patente }}</dd>
+                    
+                    <dt class="col-sm-5">Marca</dt>
+                    <dd class="col-sm-7">{{ moto.marca }}</dd>
+
+                    <dt class="col-sm-5">Modelo</dt>
+                    <dd class="col-sm-7">{{ moto.modelo }}</dd>
+
+                    <dt class="col-sm-5">Color</dt>
+                    <dd class="col-sm-7">{{ moto.color }}</dd>
+
+                    <dt class="col-sm-5">Año</dt>
+                    <dd class="col-sm-7">{{ moto.anio }}</dd>
+                    
+                    <dt class="col-sm-5">N° Chasis</dt>
+                    <dd class="col-sm-7">{{ moto.numero_chasis|default:"N/A" }}</dd>
+
+                    <dt class="col-sm-5">Motor</dt>
+                    <dd class="col-sm-7">{{ moto.motor|default:"N/A" }}</dd>
+
+                    <dt class="col-sm-5">Propietario</dt>
+                    <dd class="col-sm-7">
+                        <span class="badge {% if moto.propietario == 'Empresa' %}bg-primary{% else %}bg-info text-dark{% endif %}">
+                            {{ moto.propietario }}
+                        </span>
+                    </dd>
+
+                    <dt class="col-sm-5">Motorista Actual</dt>
+                    <dd class="col-sm-7">
+                        {% with ultima_asignacion=moto.asignacionmoto_set.last %}
+                            {% if ultima_asignacion and not ultima_asignacion.fechaTermino %}
+                                <a href="{% url 'detalle_motorista' ultima_asignacion.motorista.pk %}">
+                                    {{ ultima_asignacion.motorista }}
+                                </a>
+                            {% else %}
+                                <span class="text-muted">Sin asignar</span>
+                            {% endif %}
+                        {% endwith %}
+                    </dd>
                 </dl>
             </div>
         </div>
 
         <div class="card mb-4">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <strong>Documentación</strong>
-                <a href="{% url 'gestionar_documentacion_moto' moto.pk %}" class="btn btn-sm btn-outline-secondary">Gestionar</a>
+                <strong>Documentación x Año</strong>
+                <a href="{% url 'gestionar_documentacion_moto' moto.pk %}" class="btn btn-sm btn-outline-secondary">Actualizar</a>
             </div>
             <div class="card-body">
                 {% with doc=moto.documentacion %}
                     {% if doc %}
-                        <h5 class="card-title">Año {{ doc.anio }}</h5>
-                        <p>
-                            <a href="{% if doc.permiso_circulacion_file %}{{ doc.permiso_circulacion_file.url }}{% else %}.{% endif %}" 
-                               class="btn {% if doc.is_permiso_vigente %}btn-outline-success{% else %}btn-outline-danger{% endif %} {% if not doc.permiso_circulacion_file %}disabled{% endif %}" 
-                               target="_blank">
-                               Permiso
-                            </a>
+                        <h5 class="card-title border-bottom pb-2">Documentos Año {{ doc.anio }}</h5>
+                        
+                        <div class="d-grid gap-2 d-md-block mb-3">
+                            <a href="{% if doc.permiso_circulacion_file %}{{ doc.permiso_circulacion_file.url }}{% else %}#{% endif %}" 
+                               class="btn btn-sm {% if doc.is_permiso_vigente %}btn-outline-success{% else %}btn-outline-danger{% endif %} {% if not doc.permiso_circulacion_file %}disabled{% endif %}" 
+                               target="_blank">Permiso Circulación</a>
                             
-                            <a href="{% if doc.seguro_obligatorio_file %}{{ doc.seguro_obligatorio_file.url }}{% else %}.{% endif %}" 
-                               class="btn {% if doc.is_seguro_vigente %}btn-outline-success{% else %}btn-outline-danger{% endif %} {% if not doc.seguro_obligatorio_file %}disabled{% endif %}" 
-                               target="_blank">
-                               Seguro
-                            </a>
+                            <a href="{% if doc.seguro_obligatorio_file %}{{ doc.seguro_obligatorio_file.url }}{% else %}#{% endif %}" 
+                               class="btn btn-sm {% if doc.is_seguro_vigente %}btn-outline-success{% else %}btn-outline-danger{% endif %} {% if not doc.seguro_obligatorio_file %}disabled{% endif %}" 
+                               target="_blank">Seguro Obligatorio</a>
                             
-                            <a href="{% if doc.revision_tecnica_file %}{{ doc.revision_tecnica_file.url }}{% else %}.{% endif %}" 
-                               class="btn {% if doc.is_revision_vigente %}btn-outline-success{% else %}btn-outline-danger{% endif %} {% if not doc.revision_tecnica_file %}disabled{% endif %}" 
-                               target="_blank">
-                               Revisión
-                            </a>
-                            </p>
-                        <ul class="list-group list-group-flush">
+                            <a href="{% if doc.revision_tecnica_file %}{{ doc.revision_tecnica_file.url }}{% else %}#{% endif %}" 
+                               class="btn btn-sm {% if doc.is_revision_vigente %}btn-outline-success{% else %}btn-outline-danger{% endif %} {% if not doc.revision_tecnica_file %}disabled{% endif %}" 
+                               target="_blank">Revisión Técnica</a>
+                        </div>
+
+                        <ul class="list-group list-group-flush small">
                             <li class="list-group-item d-flex justify-content-between">
-                                <span>Venc. Permiso:</span>
-                                <span class="text-muted">{{ doc.permiso_circulacion_vencimiento|date:"d-m-Y"|default:"Sin fecha" }}</span>
+                                <span>Vencimiento Permiso:</span>
+                                <span class="text-muted">{{ doc.permiso_circulacion_vencimiento|date:"d-m-Y"|default:"-" }}</span>
                             </li>
                             <li class="list-group-item d-flex justify-content-between">
-                                <span>Venc. Seguro:</span>
-                                <span class="text-muted">{{ doc.seguro_obligatorio_vencimiento|date:"d-m-Y"|default:"Sin fecha" }}</span>
+                                <span>Vencimiento Seguro:</span>
+                                <span class="text-muted">{{ doc.seguro_obligatorio_vencimiento|date:"d-m-Y"|default:"-" }}</span>
                             </li>
                             <li class="list-group-item d-flex justify-content-between">
-                                <span>Venc. Revisión:</span>
-                                <span class="text-muted">{{ doc.revision_tecnica_vencimiento|date:"d-m-Y"|default:"Sin fecha" }}</span>
+                                <span>Vencimiento Revisión:</span>
+                                <span class="text-muted">{{ doc.revision_tecnica_vencimiento|date:"d-m-Y"|default:"-" }}</span>
                             </li>
                         </ul>
                     {% else %}
@@ -92,17 +115,17 @@
 
         <div class="card mb-4">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <strong>Historial de Asignaciones</strong>
-                <a href="{% url 'asignar_moto_motorista' moto.pk %}" class="btn btn-sm btn-outline-secondary">Asignar</a>
+                <strong>Historial de Motoristas</strong>
+                <a href="{% url 'asignar_moto_motorista' moto.pk %}" class="btn btn-sm btn-outline-secondary">Asignar Motorista</a>
             </div>
              <ul class="list-group list-group-flush" style="max-height: 200px; overflow-y: auto;">
                 {% for asignacion in moto.asignacionmoto_set.all %}
                     <li class="list-group-item">
                         <strong>{{ asignacion.motorista|default:"Sin Asignar" }}</strong>
                         <small class="text-muted d-block">
-                            {{ asignacion.fechaAsignacion|date:"d-m-Y" }}
+                            {{ asignacion.fechaAsignacion|date:"d-m-Y H:i" }}
                             {% if asignacion.fechaTermino %}
-                                al {{ asignacion.fechaTermino|date:"d-m-Y" }}
+                                al {{ asignacion.fechaTermino|date:"d-m-Y H:i" }}
                             {% endif %}
                             (Estado: {{ asignacion.estado }})
                         </small>
@@ -121,14 +144,21 @@
             <ul class="list-group list-group-flush" style="max-height: 300px; overflow-y: auto;">
                 {% for mant in moto.mantenimientos.all|dictsortreversed:"fecha_mantenimiento" %}
                     <li class="list-group-item">
-                        <strong>{{ mant.fecha_mantenimiento|date:"d-m-Y" }}</strong>: {{ mant.descripcion }}
+                        <div>
+                            <strong>{{ mant.fecha_mantenimiento|date:"d-m-Y" }}</strong>: {{ mant.descripcion }}
+                        </div>
+
                         <small class="text-muted d-block">
                             Taller: {{ mant.taller|default:"N/A" }} | 
-                            Kilometraje: {{ mant.kilometraje|default:"N/A" }} | 
+                            KM: {{ mant.kilometraje|default:"N/A" }} | 
                             Costo: ${{ mant.costo|default:"0" }}
                             {% if mant.factura %}
                                 | <a href="{{ mant.factura.url }}" target="_blank">Ver Factura</a>
                             {% endif %}
+                        </small>
+
+                        <small class="text-muted d-block mt-1" style="font-size: 0.75rem;">
+                            <i class="bi bi-clock-history"></i> Registrado el: {{ mant.fecha_registro|date:"d-m-Y H:i" }}
                         </small>
                     </li>
                 {% empty %}

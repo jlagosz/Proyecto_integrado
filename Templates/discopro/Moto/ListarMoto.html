@@ -22,6 +22,7 @@
             <th>Marca</th>
             <th>Modelo</th>
             <th>Año</th>
+            <th>Propietario</th>
             <th>Motorista Asignado</th>
             <th>Acciones</th>
         </tr>
@@ -33,7 +34,24 @@
             <td>{{ moto.marca }}</td>
             <td>{{ moto.modelo }}</td>
             <td>{{ moto.anio }}</td>
-            <td>{{ moto.motorista_actual|default:"Sin asignar" }}</td>
+
+            <td>
+                <span class="badge 
+                    {% if moto.propietario == 'Empresa' %}bg-primary
+                    {% else %}bg-info text-dark{% endif %}">
+                    {{ moto.propietario }}
+                </span>
+            </td>
+            <td>
+                {% if moto.motorista_actual %}
+                    {{ moto.motorista_actual }}
+                {% else %}
+                    <a href="{% url 'asignar_moto_motorista' moto.pk %}" class="btn btn-sm btn-outline-success">
+                        <i class="bi bi-plus-circle"></i> Asignar
+                    </a>
+                {% endif %}
+            </td>
+
             <td>
                 <a href="{% url 'detalle_moto' moto.pk %}" class="btn btn-sm btn-info">Ver</a>
                 <a href="{% url 'moto_modificar' moto.pk %}" class="btn btn-sm btn-warning">Editar</a>
@@ -42,7 +60,7 @@
         </tr>
         {% empty %}
         <tr>
-            <td colspan="6" class="text-center">No hay motos registradas.</td>
+            <td colspan="7" class="text-center">No hay motos registradas.</td>
         </tr>
         {% endfor %}
     </tbody>

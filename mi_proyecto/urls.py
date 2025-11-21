@@ -34,6 +34,7 @@ urlpatterns = [
     path('motoristas/editar/<int:pk>/', views.MotoristaUpdateView.as_view(), name='motorista_modificar'),
     path('motoristas/eliminar/<int:pk>/', views.MotoristaDeleteView.as_view(), name='motorista_eliminar'),
     path('motorista/<int:motorista_pk>/crear-contacto/', views.ContactoEmergenciaCreateView.as_view(), name='crear_contacto_emergencia'),
+    path('contacto/eliminar/<int:pk>/', views.ContactoEmergenciaDeleteView.as_view(), name='eliminar_contacto_emergencia'),
     
     # --- CRUD MOTOS ---
     path('motos/', views.MotoListView.as_view(), name='moto_lista'),

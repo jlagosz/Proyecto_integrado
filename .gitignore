@@ -1,8 +1,25 @@
+# --- Archivos de Sistema y Entorno ---
 .env
-__pycache__/
-*.pyc
-/media/
+venv/
 .vscode/
 .idea/
+.DS_Store
+
+# --- Python y Django ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+db.sqlite3
+*.log
+
+# --- SonarQube ---
 .scannerwork/
-venv/
+
+# --- MEDIA FILES (Configuración Especial) ---
+# 1. Ignorar TODO lo que esté dentro de la carpeta media
+/media/*
+
+# 2.
+# (Esto obliga a Git a subir las carpetas donde estén estos archivos)
+!/media/**/.gitkeep

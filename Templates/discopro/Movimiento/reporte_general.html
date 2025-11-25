@@ -1,0 +1,130 @@
+{% extends 'discopro/base.html' %}
+{% load static %}
+
+{% block title %}Reporte de Movimientos{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Reporte de Gestión</h1>
+        <a href="{% url 'movimiento_lista' %}" class="btn btn-outline-secondary">Volver al Listado</a>
+    </div>
+
+    <div class="row text-center mb-4">
+        <div class="col-md-4">
+            <div class="card text-white bg-primary mb-3 shadow">
+                <div class="card-header">Movimientos de HOY</div>
+                <div class="card-body">
+                    <h1 class="display-4 fw-bold">{{ total_hoy }}</h1>
+                    <p class="card-text">Registrados el {{ now|date:"d/m/Y" }}</p>
+                    <a href="{% url 'movimiento_reporte_pdf' %}?tipo=diario" class="btn btn-light btn-sm w-100 fw-bold" target="_blank">
+                        Descargar PDF Diario
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white bg-success mb-3 shadow">
+                <div class="card-header">Total ESTE MES</div>
+                <div class="card-body">
+                    <h1 class="display-4 fw-bold">{{ total_mes }}</h1>
+                    <p class="card-text">Acumulado mensual</p>
+                    <a href="{% url 'movimiento_reporte_pdf' %}?tipo=mensual" class="btn btn-light btn-sm w-100 fw-bold" target="_blank">
+                        Descargar PDF Mensual
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white bg-dark mb-3 shadow">
+                <div class="card-header">Total AÑO ACTUAL</div>
+                <div class="card-body">
+                    <h1 class="display-4 fw-bold">{{ total_anio }}</h1>
+                    <p class="card-text">Acumulado anual</p>
+                    <a href="{% url 'movimiento_reporte_pdf' %}?tipo=anual" class="btn btn-light btn-sm w-100 fw-bold" target="_blank">
+                        Descargar PDF Anual
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Estados de Hoy</h5>
+                </div>
+                <ul class="list-group list-group-flush">
+                    {% for item in estados_hoy %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ item.estado|title }}
+                        <span class="badge bg-primary rounded-pill">{{ item.total }}</span>
+                    </li>
+                    {% empty %}
+                    <li class="list-group-item text-muted">No hay movimientos hoy.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Tipos de Movimiento (Mes)</h5>
+                </div>
+                <ul class="list-group list-group-flush">
+                    {% for item in tipos_mes %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ item.tipo_movimiento__nombre }}
+                        <span class="badge bg-success rounded-pill">{{ item.total }}</span>
+                    </li>
+                    {% empty %}
+                    <li class="list-group-item text-muted">Sin datos este mes.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Evolución Anual (Mes a Mes)</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Mes</th>
+                                <th>Total Movimientos</th>
+                                <th style="width: 50%;">Visualización</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in evolucion_anual %}
+                            <tr>
+                                <td>{{ item.mes|date:"F Y"|title }}</td>
+                                <td class="fw-bold">{{ item.total }}</td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        {% widthratio item.total total_anio 100 as porcentaje %}
+                                        
+                                        
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center text-muted">No hay datos registrados este año.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

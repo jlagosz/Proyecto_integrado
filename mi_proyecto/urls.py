@@ -62,6 +62,10 @@ urlpatterns = [
     # --- VISTAS DE ASIGNACIÓN ---
     path('motorista/<int:motorista_pk>/asignar-farmacia/', views.AsignacionFarmaciaCreateView.as_view(), name='asignar_farmacia'),
     path('moto/<str:moto_pk>/asignar-motorista/', views.AsignacionMotoCreateView.as_view(), name='asignar_moto_motorista'),
+
+    # --- REPORTES ---
+    path('movimientos/reportes/', views.ReporteMovimientosView.as_view(), name='movimiento_reportes'),
+    path('movimientos/reportes/pdf/', views.ExportarReportePDFView.as_view(), name='movimiento_reporte_pdf'),
 ]
 
 if settings.DEBUG:

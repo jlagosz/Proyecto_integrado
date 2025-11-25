@@ -1,3 +1,11 @@
+from django.db.models import Count
+from django.db.models.functions import TruncMonth
+from django.views import View
+from .utils import render_to_pdf
+from django.views.generic import TemplateView
+from collections import defaultdict
+from datetime import timedelta
+
 from django.utils import timezone
 from django.db.models import Q, Subquery, OuterRef
 from django.urls import reverse_lazy
@@ -8,7 +16,9 @@ from django.http import HttpRequest
 
 # --- IMPORTACIONES PARA MENSAJES ---
 from django.contrib import messages
-from django.contrib.messages.views import SuccessMessageMixin 
+from django.contrib.messages.views import SuccessMessageMixin
+
+from discopro.utils import render_to_pdf 
 
 from .forms import LoginForm
 
@@ -50,7 +60,154 @@ class LoginRequiredMixin:
         context['usuario_logueado'] = self.request.usuario
         return context
 
+# --- VISTA DE REPORTES ---
+class ReporteMovimientosView(LoginRequiredMixin, TemplateView):
+    """Vista para mostrar estadísticas Diarias, Mensuales y Anuales"""
+    template_name = 'discopro/Movimiento/reporte_general.html'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # 1. Calcular Rangos de Tiempo en Python (Hora Local Chile)
+        ahora = timezone.now()
+        hoy_local = timezone.localtime(ahora)
+        
+        # Inicio del día de hoy (00:00:00)
+        inicio_dia = hoy_local.replace(hour=0, minute=0, second=0, microsecond=0)
+        # Final del día (Inicio de mañana)
+        fin_dia = inicio_dia + timedelta(days=1)
+        
+        # Inicio del mes actual (Día 1 a las 00:00:00)
+        inicio_mes = hoy_local.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        
+        # Inicio del año actual
+        inicio_anio = hoy_local.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+
+        # --- 1. REPORTE DIARIO (HOY) ---
+        # Filtro: Mayor o igual al inicio del día Y menor que mañana
+        qs_hoy = Movimiento.objects.filter(
+            fecha_movimiento__gte=inicio_dia,
+            fecha_movimiento__lt=fin_dia
+        )
+        context['total_hoy'] = qs_hoy.count()
+        context['estados_hoy'] = qs_hoy.values('estado').annotate(total=Count('estado'))
+
+        # --- 2. REPORTE MENSUAL (ESTE MES) ---
+        # Filtro: Mayor o igual al inicio del mes
+        qs_mes = Movimiento.objects.filter(
+            fecha_movimiento__gte=inicio_mes
+        )
+        context['total_mes'] = qs_mes.count()
+        context['tipos_mes'] = qs_mes.values('tipo_movimiento__nombre').annotate(total=Count('tipo_movimiento'))
+
+        # --- 3. REPORTE ANUAL (ESTE AÑO) ---
+        # Filtro: Mayor o igual al inicio del año
+        qs_anio = Movimiento.objects.filter(
+            fecha_movimiento__gte=inicio_anio
+        ).order_by('fecha_movimiento')
+        
+        context['total_anio'] = qs_anio.count()
+        
+        # Lógica Python para agrupar por meses (Ya que MySQL XAMPP falla con TruncMonth)
+        datos_agrupados = defaultdict(int)
+        
+        for mov in qs_anio:
+            # Convertimos a local para agrupar correctamente
+            fecha_local = timezone.localtime(mov.fecha_movimiento)
+            # Normalizamos al día 1 del mes
+            mes_key = fecha_local.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            datos_agrupados[mes_key] += 1
+        evolucion_anual_lista = []
+        for fecha, cantidad in datos_agrupados.items():
+            evolucion_anual_lista.append({
+                'mes': fecha,  
+                'total': cantidad
+            })
+        
+        # Ordenamos por fecha
+        evolucion_anual_lista.sort(key=lambda x: x['mes'])
+        
+        context['evolucion_anual'] = evolucion_anual_lista
+
+        return context
+
+
+# --- VISTA DE DESCARGA PDF ---
+class ExportarReportePDFView(LoginRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        tipo = request.GET.get('tipo', 'diario')
+        
+        # 1. Configuración de Fechas (Igual que en el reporte web)
+        ahora = timezone.now()
+        hoy_local = timezone.localtime(ahora)
+        
+        # Definimos los rangos de tiempo para evitar errores de MySQL
+        inicio_dia = hoy_local.replace(hour=0, minute=0, second=0, microsecond=0)
+        fin_dia = inicio_dia + timedelta(days=1)
+        inicio_mes = hoy_local.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        inicio_anio = hoy_local.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+
+        data = {}
+        titulo = ""
+        movimientos = []
+
+        if tipo == 'diario':
+            titulo = f"Reporte Diario ({hoy_local.strftime('%d-%m-%Y')})"
+            # Filtro por rango exacto del día
+            movimientos = Movimiento.objects.filter(
+                fecha_movimiento__gte=inicio_dia,
+                fecha_movimiento__lt=fin_dia
+            )
+            # Agrupación manual para el PDF
+            data['detalles'] = movimientos.values('estado').annotate(total=Count('estado'))
+            data['columnas'] = ['Estado', 'Cantidad']
+
+        elif tipo == 'mensual':
+            titulo = f"Reporte Mensual ({hoy_local.strftime('%B %Y')})"
+            # Filtro desde el inicio del mes
+            movimientos = Movimiento.objects.filter(
+                fecha_movimiento__gte=inicio_mes
+            )
+            data['detalles'] = movimientos.values('tipo_movimiento__nombre').annotate(total=Count('tipo_movimiento'))
+            data['columnas'] = ['Tipo de Movimiento', 'Cantidad']
+
+        elif tipo == 'anual':
+            titulo = f"Reporte Anual ({hoy_local.year})"
+            # Filtro desde el inicio del año
+            movimientos = Movimiento.objects.filter(
+                fecha_movimiento__gte=inicio_anio
+            ).order_by('fecha_movimiento')
+            
+            # Lógica Python para agrupar meses (sin error MySQL)
+            datos_agrupados = defaultdict(int)
+            for mov in movimientos:
+                fecha_local = timezone.localtime(mov.fecha_movimiento)
+                mes_key = fecha_local.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+                datos_agrupados[mes_key] += 1
+            
+            lista_anual = []
+            for fecha, cantidad in datos_agrupados.items():
+                nombre_mes = fecha.strftime('%B')
+                lista_anual.append({'nombre': nombre_mes, 'total': cantidad})
+            
+            # Ordenar
+            lista_anual.sort(key=lambda x: x['nombre'])
+            
+            data['detalles'] = lista_anual
+            data['columnas'] = ['Mes', 'Cantidad']
+            data['es_anual'] = True
+
+        # Contexto final
+        context = {
+            'titulo': titulo,
+            'fecha_impresion': hoy_local,
+            'usuario': request.user,
+            'data': data,
+            'total_general': movimientos.count() if hasattr(movimientos, 'count') else len(movimientos)
+        }
+        
+        return render_to_pdf('discopro/Movimiento/reporte_pdf.html', context)
+    
 # --- VISTA PRINCIPAL ---
 def index(request: HttpRequest):
     """
@@ -465,7 +622,7 @@ class MovimientoDetailView(LoginRequiredMixin, DetailView):
         context['tramos_hijos'] = Movimiento.objects.filter(movimiento_padre=self.object).order_by('fecha_movimiento')
         return context
 
-class MovimientoCreateView(SuccessMessageMixin, CreateView):
+class MovimientoCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
     """Crea un Movimiento Padre (Despacho)."""
     model = Movimiento
     form_class = MovimientoForm

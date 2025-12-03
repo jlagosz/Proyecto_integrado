@@ -4,13 +4,13 @@
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="lista-h1">Listado de Usuarios del Sistema</h1>
+    <h1 class="lista-h1">Listado de Usuarios</h1>
     <a href="{% url 'usuario_crear' %}" class="btn btn-primary">Crear Nuevo Usuario</a>
 </div>
 
 <form method="get" class="mb-4">
     <div class="input-group">
-        <input type="text" class="form-control" name="q" placeholder="Buscar por Nombre, Apellido, RUT o Nombre de Usuario..." value="{{ request.GET.q }}">
+        <input type="text" class="form-control" name="q" placeholder="Buscar por Nombre, RUT o Usuario..." value="{{ request.GET.q }}">
         <button class="btn btn-outline-secondary" type="submit">Buscar</button>
     </div>
 </form>
@@ -20,7 +20,7 @@
         <thead class="table-dark">
             <tr>
                 <th>Nombre Completo</th>
-                <th>Nombre de Usuario</th>
+                <th>Usuario (Login)</th>
                 <th>RUT</th>
                 <th>Correo</th>
                 <th>Rol</th>
@@ -31,26 +31,45 @@
         <tbody>
             {% for usuario in usuarios %}
             <tr>
-                <td>{{ usuario.nombres }} {{ usuario.apellidos }}</td>
-                <td>{{ usuario.nombreUsuario }}</td>
-                <td>{{ usuario.rut }}</td>
-                <td>{{ usuario.correo }}</td>
-                <td>{{ usuario.rol.nombreRol }}</td>
-                <td>{{ usuario.estado }}</td>
+                <td>
+                    {% if usuario.first_name or usuario.last_name %}
+                        {{ usuario.first_name }} {{ usuario.last_name }}
+                    {% else %}
+                        <span class="text-muted fst-italic">(Sin nombre)</span>
+                    {% endif %}
+                </td>
+                <td><strong>{{ usuario.username }}</strong></td>
+                <td>{{ usuario.rut|default:"--" }}</td>
+                <td>{{ usuario.email|default:"--" }}</td>
+                <td>
+                    {% if usuario.is_superuser %}
+                        <span class="badge bg-danger">Super Admin</span>
+                    {% elif usuario.rol %}
+                        {{ usuario.rol.nombreRol }}
+                    {% else %}
+                        <span class="badge bg-secondary">Sin Rol</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if usuario.is_active %}
+                        <span class="badge bg-success">Activo</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Inactivo</span>
+                    {% endif %}
+                </td>
                 <td>
                     <a href="{% url 'usuario_editar' usuario.pk %}" class="btn btn-sm btn-warning">Editar</a>
-                    <a href="{% url 'usuario_eliminar' usuario.pk %}" class="btn btn-sm btn-danger">Eliminar</a>
+                    
+                    {% if usuario.pk != request.user.pk %}
+                        <a href="{% url 'usuario_eliminar' usuario.pk %}" class="btn btn-sm btn-danger">Eliminar</a>
+                    {% else %}
+                        <button class="btn btn-sm btn-secondary" disabled>Actual</button>
+                    {% endif %}
                 </td>
             </tr>
             {% empty %}
             <tr>
-                <td colspan="7" class="text-center">
-                    {% if request.GET.q %}
-                        No se encontraron usuarios que coincidan con "{{ request.GET.q }}".
-                    {% else %}
-                        No hay usuarios registrados.
-                    {% endif %}
-                </td>
+                <td colspan="7" class="text-center">No hay usuarios registrados.</td>
             </tr>
             {% endfor %}
         </tbody>

@@ -25,20 +25,7 @@ class ComunaAdmin(admin.ModelAdmin):
     def get_region(self, obj):
         return obj.provincia.region
 
-# --- Modelos de Usuario/Rol ---
-@admin.register(models.Rol)
-class RolAdmin(admin.ModelAdmin):
-    """Gestión de Roles de usuario (Operador, Gerente, etc.)."""
-    list_display = ('idRol', 'nombreRol')
-
-@admin.register(models.Usuario)
-class UsuarioAdmin(admin.ModelAdmin):
-    """Gestión de Usuarios del sistema."""
-    list_display = ('nombres', 'apellidos', 'rut', 'correo', 'rol', 'estado')
-    list_filter = ('rol', 'estado')
-    search_fields = ('nombres', 'apellidos', 'rut')
-
-# --- Modelos de Usuario/Rol (Configuración UserAdmin) ---
+# --- Modelos de Usuario/Rol  ---
 @admin.register(models.Rol)
 class RolAdmin(admin.ModelAdmin):
     list_display = ('idRol', 'nombreRol')
@@ -53,12 +40,10 @@ class UsuarioAdmin(UserAdmin):
     list_filter = ('rol', 'is_staff', 'is_active', 'groups')
     search_fields = ('username', 'first_name', 'last_name', 'email', 'rut')
     
-    # Agregamos los campos personalizados a los fieldsets de edición
     fieldsets = UserAdmin.fieldsets + (
         ('Información Adicional', {'fields': ('rut', 'telefono', 'rol')}),
     )
     
-    # Agregamos los campos personalizados al formulario de creación
     add_fieldsets = UserAdmin.add_fieldsets + (
         ('Información Adicional', {'fields': ('rut', 'telefono', 'rol')}),
     )

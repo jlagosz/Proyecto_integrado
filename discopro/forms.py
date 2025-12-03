@@ -1,5 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm, AuthenticationForm
+from django.contrib.auth.password_validation import validate_password, password_validators_help_text_html
+from django.core.exceptions import ValidationError
 from .models import (
     Farmacia, Motorista, Moto, ContactoEmergencia, 
     AsignacionFarmacia, AsignacionMoto, Documentacion, DocumentacionMoto,
@@ -34,69 +36,106 @@ class NativeDateTimeInput(forms.DateTimeInput):
 class CustomLoginForm(AuthenticationForm):
     """Formulario de inicio de sesión."""
     username = forms.CharField(
-        label="Usuario",
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombre de usuario', 'autofocus': True})
+        label="Usuario o Correo",
+        widget=forms.TextInput(attrs={
+            'class': 'form-control', 
+            'placeholder': 'Nombre de usuario o Email',
+            'autofocus': True
+        })
     )
     password = forms.CharField(
         label="Contraseña",
-        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Contraseña'})
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control', 
+            'placeholder': 'Contraseña',
+            'autocomplete': 'off'
+        })
     )
 
 class UsuarioForm(forms.ModelForm):
     """
-    Formulario para Crear/Editar usuarios en el sistema.
-    Utiliza los campos nativos de Django (username, first_name, last_name, email).
+    Formulario para Crear/Editar usuarios con validación de seguridad completa.
     """
     password = forms.CharField(
-        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+        label="Contraseña",
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'autocomplete': 'new-password',
+            'placeholder': 'Ingrese contraseña segura'
+        }),
         required=False,
-        help_text="Deja en blanco para mantener la contraseña actual."
+        help_text=password_validators_help_text_html() 
     )
+    
     confirmar_contrasena = forms.CharField(
-        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
-        required=False,
-        label="Confirmar contraseña"
+        label="Confirmar contraseña",
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'autocomplete': 'new-password',
+            'placeholder': 'Repita la contraseña'
+        }),
+        required=False
     )
 
     class Meta:
         model = Usuario
         fields = [
-            'username', 'first_name', 'last_name', 'rut', 'email', 'telefono', 
-            'rol', 'is_active', 'password', 'confirmar_contrasena'
+            'username', 'first_name', 'last_name', 'email', 
+            'rut', 'telefono', 'rol', 'is_active', 
+            'password', 'confirmar_contrasena'
         ]
         widgets = {
-            'username': forms.TextInput(attrs={'class': 'form-control'}),
-            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
-            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
-            'rut': forms.TextInput(attrs={'class': 'form-control'}),
-            'email': forms.EmailInput(attrs={'class': 'form-control'}),
-            'telefono': forms.TextInput(attrs={'class': 'form-control'}),
+            'username': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombre de usuario (Login)'}),
+            'first_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombres'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Apellidos'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'correo@ejemplo.com'}),
+            'rut': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '12.345.678-9'}),
+            'telefono': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '+569... (Opcional)'}),
             'rol': forms.Select(attrs={'class': 'form-select'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        
+        # Campos obligatorios
+        campos_obligatorios = ['first_name', 'last_name', 'email', 'rut', 'rol']
+        for campo in campos_obligatorios:
+            self.fields[campo].required = True
+            if 'placeholder' in self.fields[campo].widget.attrs:
+                self.fields[campo].widget.attrs['placeholder'] += ' *'
+
+        self.fields['telefono'].required = False
+
         if not self.instance.pk:
             self.fields['password'].required = True
             self.fields['confirmar_contrasena'].required = True
-            self.fields['password'].help_text = "Ingresa una contraseña segura."
 
     def clean(self):
         cleaned_data = super().clean()
-        password = cleaned_data.get("password")
-        confirmar_contrasena = cleaned_data.get("confirmar_contrasena")
-
-        if password or (not self.instance.pk):
-            if password != confirmar_contrasena:
-                raise forms.ValidationError("Las contraseñas no coinciden.")
+        p1 = cleaned_data.get('password')
+        p2 = cleaned_data.get('confirmar_contrasena')
+        
+        if p1 or p2:
+            if p1 != p2:
+                self.add_error('confirmar_contrasena', "Las contraseñas no coinciden.")
+            else:
+                # --- AGREGA ESTE PRINT ---
+                print(f"DEBUG: Validando password: {p1}") 
+                try:
+                    validate_password(p1, self.instance)
+                except ValidationError as error:
+                    # --- AGREGA ESTE PRINT ---
+                    print(f"DEBUG: Error encontrado: {error}")
+                    self.add_error('password', error)
+                    
         return cleaned_data
 
     def save(self, commit=True):
         user = super().save(commit=False)
-        password = self.cleaned_data.get("password")
-        if password:
-            user.set_password(password) 
+        p1 = self.cleaned_data.get('password')
+        if p1:
+            user.set_password(p1)
         if commit:
             user.save()
         return user
@@ -163,7 +202,6 @@ class FarmaciaForm(forms.ModelForm):
             self.initial['region'] = self.instance.comuna.provincia.region
 
 class MotoristaForm(forms.ModelForm):
-    # Campos "ficticios" para el filtrado visual
     region = forms.ModelChoiceField(
         queryset=Region.objects.all(),
         label="Región",
@@ -298,7 +336,7 @@ class MantenimientoForm(forms.ModelForm):
             'kilometraje': forms.NumberInput(attrs={'class': 'form-control'}),
             'factura': forms.FileInput(attrs={'class': 'form-control'}),
         }
-
+    
 # --- Movimientos ---
 class TipoMovimientoForm(forms.ModelForm):
     """Formulario para gestionar los tipos de movimiento."""
@@ -341,6 +379,41 @@ class MovimientoForm(forms.ModelForm):
         else:
             # Es un padre: Es obligatorio
             self.fields['numero_despacho'].required = True
+
+    def clean(self):
+        cleaned_data = super().clean()
+        motorista = cleaned_data.get('motorista_asignado')
+        fecha_movimiento = cleaned_data.get('fecha_movimiento')
+        if not motorista or not fecha_movimiento:
+            return cleaned_data
+        movimientos_activos = Movimiento.objects.filter(
+            motorista_asignado=motorista,
+            estado='pendiente' 
+        ).exclude(pk=self.instance.pk) 
+
+        if movimientos_activos.exists():
+            raise forms.ValidationError(f"El motorista {motorista} ya tiene un despacho pendiente. Debe completarlo antes de asignar uno nuevo.")
+        
+        return cleaned_data
+
+    def clean_origen(self):
+        origen = self.cleaned_data.get('origen')
+        motorista = self.cleaned_data.get('motorista_asignado')
+        movimiento_padre = self.cleaned_data.get('movimiento_padre')
+
+
+        if not movimiento_padre and motorista:
+            asignacion = AsignacionFarmacia.objects.filter(
+                motorista=motorista,
+                fechaTermino__isnull=True
+            ).last()
+            
+            if asignacion:
+                farmacia_actual = asignacion.farmacia.nombre
+                if farmacia_actual.lower() not in origen.lower():
+                    pass 
+        
+        return origen
 
 # --- ASIGNACIONES ---
 class AsignacionFarmaciaForm(forms.ModelForm):

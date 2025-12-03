@@ -1,15 +1,19 @@
 {% extends 'discopro/base.html' %}
 {% load static %}
-{% block title %}{% if form.instance.pk %}Editar Usuario{% else %}Crear Usuario{% endif %}{% endblock %}
+
+{% block title %}
+  {% if form.instance.pk %}Editar Usuario{% else %}Crear Usuario{% endif %}
+{% endblock %}
 
 {% block content %}
 
 <div class="form-container-center">
     <div class="form-card">
+        
         <div class="form-card-header">
             <h2>
                 <i class="bi bi-people-fill"></i>
-                {% if form.instance.pk %}Editar Usuario: {{ form.instance.nombres }}{% else %}Crear Nuevo Usuario{% endif %}
+                {% if form.instance.pk %}Editar Usuario{% else %}Crear Nuevo Usuario{% endif %}
             </h2>
         </div>
 
@@ -23,90 +27,102 @@
                   </div>
                 {% endif %}
 
-                <div class="row">
-                  <div class="col-md-6">
-                    <div class="mb-3">
-                      <label for="{{ form.nombres.id_for_label }}" class="form-label">{{ form.nombres.label }}</label>
-                      {{ form.nombres.as_widget }}
-                      {% if form.nombres.errors %}<div class="text-danger">{{ form.nombres.errors }}</div>{% endif %}
-                    </div>
-                  </div>
-                  <div class="col-md-6">
-                    <div class="mb-3">
-                      <label for="{{ form.apellidos.id_for_label }}" class="form-label">{{ form.apellidos.label }}</label>
-                      {{ form.apellidos.as_widget }}
-                      {% if form.apellidos.errors %}<div class="text-danger">{{ form.apellidos.errors }}</div>{% endif %}
-                    </div>
-                  </div>
-                </div>
-                
-                <div class="mb-3">
-                  <label for="{{ form.rut.id_for_label }}" class="form-label">{{ form.rut.label }}</label>
-                  {{ form.rut.as_widget }}
-                  {% if form.rut.errors %}<div class="text-danger">{{ form.rut.errors }}</div>{% endif %}
-                </div>
+                <h5 class="text-muted mb-3 pb-2 border-bottom">Datos Personales</h5>
 
                 <div class="row">
                   <div class="col-md-6">
                     <div class="mb-3">
-                      <label for="{{ form.correo.id_for_label }}" class="form-label">{{ form.correo.label }}</label>
-                      {{ form.correo.as_widget }}
-                      {% if form.correo.errors %}<div class="text-danger">{{ form.correo.errors }}</div>{% endif %}
+                      <label class="form-label">Nombres</label>
+                      {{ form.first_name.as_widget }}
+                      <div class="text-danger">{{ form.first_name.errors }}</div>
                     </div>
                   </div>
                   <div class="col-md-6">
                     <div class="mb-3">
-                      <label for="{{ form.telefono.id_for_label }}" class="form-label">{{ form.telefono.label }}</label>
-                      {{ form.telefono.as_widget }}
-                      {% if form.telefono.errors %}<div class="text-danger">{{ form.telefono.errors }}</div>{% endif %}
+                      <label class="form-label">Apellidos</label>
+                      {{ form.last_name.as_widget }}
+                      <div class="text-danger">{{ form.last_name.errors }}</div>
                     </div>
                   </div>
                 </div>
                 
                 <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                          <label class="form-label">RUT</label>
+                          {{ form.rut.as_widget }}
+                          <div class="text-danger">{{ form.rut.errors }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                          <label class="form-label">Teléfono</label>
+                          {{ form.telefono.as_widget }}
+                          <div class="text-danger">{{ form.telefono.errors }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label">Correo Electrónico</label>
+                  {{ form.email.as_widget }}
+                  <div class="text-danger">{{ form.email.errors }}</div>
+                </div>
+                
+                <h5 class="text-muted mb-3 mt-4 pb-2 border-bottom">Rol y Permisos</h5>
+
+                <div class="row">
                   <div class="col-md-6">
                     <div class="mb-3">
-                      <label for="{{ form.rol.id_for_label }}" class="form-label">{{ form.rol.label }}</label>
+                      <label class="form-label">Rol Asignado</label>
                       {{ form.rol.as_widget }}
-                      {% if form.rol.errors %}<div class="text-danger">{{ form.rol.errors }}</div>{% endif %}
+                      <div class="text-danger">{{ form.rol.errors }}</div>
                     </div>
                   </div>
                   <div class="col-md-6">
-                    <div class="mb-3">
-                      <label for="{{ form.estado.id_for_label }}" class="form-label">{{ form.estado.label }}</label>
-                      {{ form.estado.as_widget }}
-                      {% if form.estado.errors %}<div class="text-danger">{{ form.estado.errors }}</div>{% endif %}
+                    <div class="mb-3 pt-4">
+                      <div class="form-check form-switch">
+                          {{ form.is_active }}
+                          <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                              ¿Usuario Activo?
+                          </label>
+                      </div>
+                      <div class="text-danger">{{ form.is_active.errors }}</div>
                     </div>
                   </div>
                 </div>
                 
-                <hr>
+                <h5 class="text-muted mb-3 mt-4 pb-2 border-bottom">Credenciales de Acceso</h5>
                 
                 <div class="mb-3">
-                  <label for="{{ form.nombreUsuario.id_for_label }}" class="form-label">{{ form.nombreUsuario.label }}</label>
-                  {{ form.nombreUsuario.as_widget }}
-                  {% if form.nombreUsuario.errors %}<div class="text-danger">{{ form.nombreUsuario.errors }}</div>{% endif %}
+                  <label class="form-label">Nombre de Usuario (Login)</label>
+                  {{ form.username.as_widget }}
+                  <div class="text-danger">{{ form.username.errors }}</div>
                 </div>
 
                 <div class="row">
                   <div class="col-md-6">
                     <div class="mb-3">
-                      <label for="{{ form.contrasena.id_for_label }}" class="form-label">{{ form.contrasena.label }}</label>
-                      {{ form.contrasena.as_widget }}
-                      <small class="form-text text-muted">{{ form.contrasena.help_text }}</small>
-                      {% if form.contrasena.errors %}<div class="text-danger">{{ form.contrasena.errors }}</div>{% endif %}
+                      <label class="form-label">Contraseña</label>
+                      {{ form.password.as_widget }}
+                      
+                      <small class="form-text text-muted" style="font-size: 0.85em;">
+                          {{ form.password.help_text|safe }}
+                      </small>
+                      
+                      <div class="text-danger">{{ form.password.errors }}</div>
                     </div>
                   </div>
                   <div class="col-md-6">
                     <div class="mb-3">
-                      <label for="{{ form.confirmar_contrasena.id_for_label }}" class="form-label">{{ form.confirmar_contrasena.label }}</label>
+                      <label class="form-label">Confirmar Contraseña</label>
                       {{ form.confirmar_contrasena.as_widget }}
-                      {% if form.confirmar_contrasena.errors %}<div class="text-danger">{{ form.confirmar_contrasena.errors }}</div>{% endif %}
+                      <div class="text-danger">{{ form.confirmar_contrasena.errors }}</div>
                     </div>
                   </div>
                 </div>
                 
-                <div class="form-actions">
+                <div class="form-actions mt-4">
                     <a href="{% url 'usuario_lista' %}" class="btn btn-secondary">Cancelar</a>
                     <button type="submit" class="btn btn-primary">
                         <i class="bi bi-save"></i> Guardar Usuario

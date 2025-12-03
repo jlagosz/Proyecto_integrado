@@ -1,7 +1,6 @@
 from django.db import models
 from django.utils import timezone
 from django.urls import reverse
-from django.contrib.auth.hashers import make_password, check_password
 from django.contrib.auth.models import AbstractUser
 
 # ---  Modelos Geográficos ---
@@ -43,25 +42,13 @@ class Usuario(AbstractUser):
     rut = models.CharField(max_length=12, unique=True, null=True, blank=True)
     telefono = models.CharField(max_length=20, null=True, blank=True)
     rol = models.ForeignKey(Rol, on_delete=models.PROTECT, null=True, blank=True)
+
     class Meta:
         verbose_name = 'Usuario'
         verbose_name_plural = 'Usuarios'
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.username})"
-    
-    # --- CAMPOS DE LOGIN ---
-    nombreUsuario = models.CharField(max_length=100, unique=True, verbose_name="Nombre de Usuario")
-    contrasena = models.CharField(max_length=128, verbose_name="Contraseña")
-    def __str__(self):
-        return f"{self.nombres} {self.apellidos}"
-
-    # --- MÉTODOS DE LOGIN ---
-    def set_password(self, raw_password):
-        self.contrasena = make_password(raw_password)
-
-    def check_password(self, raw_password):
-        return check_password(raw_password, self.contrasena)
 
 # --- Modelos Principales ---
 class Farmacia(models.Model):

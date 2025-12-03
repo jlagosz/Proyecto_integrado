@@ -10,6 +10,16 @@ from discopro.models import Region, Provincia, Comuna
 # --- DATOS DE CHILE (Estructura: Región -> Provincias -> Comunas) ---
 
 data_chile = {
+    "Región de Arica y Parinacota": {
+        "Arica": ["Arica", "Camarones"],
+        "Parinacota": ["Putre", "General Lagos"]
+    },
+    "Región de Magallanes y de la Antártica Chilena": {
+        "Magallanes": ["Punta Arenas", "Laguna Blanca", "Río Verde", "San Gregorio"],
+        "Antártica Chilena": ["Cabo de Hornos", "Antártica"],
+        "Tierra del Fuego": ["Porvenir", "Primavera", "Timaukel"],
+        "Última Esperanza": ["Natales", "Torres del Paine"]
+    },
     "Región Metropolitana de Santiago": {
         "Santiago": ["Santiago", "Cerrillos", "Cerro Navia", "Conchalí", "El Bosque", "Estación Central", "Huechuraba", "Independencia", "La Cisterna", "La Florida", "La Granja", "La Pintana", "La Reina", "Las Condes", "Lo Barnechea", "Lo Espejo", "Lo Prado", "Macul", "Maipú", "Ñuñoa", "Pedro Aguirre Cerda", "Peñalolén", "Providencia", "Pudahuel", "Quilicura", "Quinta Normal", "Recoleta", "Renca", "San Joaquín", "San Miguel", "San Ramón", "Vitacura"],
         "Cordillera": ["Puente Alto", "Pirque", "San José de Maipo"],
@@ -38,13 +48,11 @@ data_chile = {
         "Arauco": ["Lebu", "Arauco", "Cañete", "Contulmo", "Curanilahue", "Los Álamos", "Tirúa"],
         "Biobío": ["Los Ángeles", "Antuco", "Cabrero", "Laja", "Mulchén", "Nacimiento", "Negrete", "Quilaco", "Quilleco", "San Rosendo", "Santa Bárbara", "Tucapel", "Yumbel", "Alto Biobío"]
     }
+    
 }
 
 def cargar_datos():
     print("Iniciando carga de datos geográficos...")
-    
-    # Borrar datos antiguos para no duplicar (opcional)
-    # Region.objects.all().delete()
     
     contador_reg = 0
     contador_prov = 0

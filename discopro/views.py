@@ -23,9 +23,9 @@ from django.contrib.messages.views import SuccessMessageMixin
 
 from discopro.utils import render_to_pdf 
 
-# Importamos Formularios (Asegúrate de que forms.py tenga CustomLoginForm y UsuarioForm actualizados)
+
 from .forms import (
-    CustomLoginForm, UsuarioForm, # <--- Nuevos forms de auth
+    CustomLoginForm, UsuarioForm,
     FarmaciaForm, MotoristaForm, MotoForm, 
     AsignacionFarmaciaForm, AsignacionMotoForm, DocumentacionMotoForm, MantenimientoForm,
     ContactoEmergenciaForm, TipoMovimientoForm, MovimientoForm
@@ -48,7 +48,7 @@ def login_view(request):
         form = CustomLoginForm(request, data=request.POST)
         if form.is_valid():
             user = form.get_user()
-            login(request, user) # Crea la sesión nativa
+            login(request, user) 
             messages.success(request, f"¡Bienvenido, {user.first_name}!")
             return redirect('index')
         else:
@@ -82,7 +82,6 @@ def index(request: HttpRequest):
         'total_motos': total_motos,
         'total_usuarios': total_usuarios,       
         'total_movimientos': total_movimientos,
-        # request.user ya está disponible en los templates, pero lo pasamos explícito si quieres
         'usuario_logueado': request.user 
     }
     return render(request, "discopro/Main/dashboard.html", context)
@@ -189,7 +188,7 @@ class ExportarReportePDFView(LoginRequiredMixin, View):
         }
         return render_to_pdf('discopro/Movimiento/reporte_pdf.html', context)
 
-# --- CRUD USUARIOS (Adaptado a User nativo) ---
+# --- CRUD USUARIOS  ---
 
 class UsuarioListView(LoginRequiredMixin, ListView):
     model = Usuario
@@ -615,6 +614,15 @@ class TramoCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
 
     def get_success_url(self):
         return reverse_lazy('movimiento_detalle', kwargs={'pk': self.kwargs['padre_pk']})
+    
+    def dispatch(self, request, *args, **kwargs):
+        padre = self.get_movimiento_padre()
+        
+        if padre.estado != 'pendiente':
+            messages.error(request, "No se pueden agregar tramos a un despacho completado o anulado.")
+            return redirect('movimiento_detalle', pk=padre.pk)
+            
+        return super().dispatch(request, *args, **kwargs)
 
 class TramoUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
     model = Movimiento
@@ -642,7 +650,7 @@ class TramoDeleteView(LoginRequiredMixin, DeleteView):
         return reverse_lazy('movimiento_detalle', kwargs={'pk': self.object.movimiento_padre.pk})
 
 
-# --- VISTAS AJAX (Para Selects Dependientes) ---
+# --- VISTAS AJAX  ---
 def load_provincias(request):
     region_id = request.GET.get('region')
     provincias = Provincia.objects.filter(region_id=region_id).order_by('nombreProvincia')

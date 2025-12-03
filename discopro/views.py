@@ -10,6 +10,7 @@ from django.http import HttpRequest
 from django.utils import timezone
 from collections import defaultdict
 from datetime import timedelta
+from django.http import JsonResponse
 
 # --- AUTENTICACIÓN NATIVA DE DJANGO ---
 from django.contrib.auth import login, logout, authenticate
@@ -33,7 +34,7 @@ from .forms import (
 # Importamos Modelos
 from .models import (
     Farmacia, Motorista, Moto, AsignacionFarmacia, AsignacionMoto, DocumentacionMoto, Mantenimiento,
-    ContactoEmergencia, TipoMovimiento, Movimiento, Usuario, Rol
+    ContactoEmergencia, TipoMovimiento, Movimiento, Usuario, Rol, Provincia, Comuna
 )
 
 # --- VISTAS DE LOGIN/LOGOUT (NATIVAS) ---
@@ -639,3 +640,15 @@ class TramoDeleteView(LoginRequiredMixin, DeleteView):
 
     def get_success_url(self):
         return reverse_lazy('movimiento_detalle', kwargs={'pk': self.object.movimiento_padre.pk})
+
+
+# --- VISTAS AJAX (Para Selects Dependientes) ---
+def load_provincias(request):
+    region_id = request.GET.get('region')
+    provincias = Provincia.objects.filter(region_id=region_id).order_by('nombreProvincia')
+    return JsonResponse(list(provincias.values('idProvincia', 'nombreProvincia')), safe=False)
+
+def load_comunas(request):
+    provincia_id = request.GET.get('provincia')
+    comunas = Comuna.objects.filter(provincia_id=provincia_id).order_by('nombreComuna')
+    return JsonResponse(list(comunas.values('idComuna', 'nombreComuna')), safe=False)

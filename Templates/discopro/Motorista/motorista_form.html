@@ -18,7 +18,7 @@
         </div>
 
         <div class="form-card-body">
-            <form method="post" enctype="multipart/form-data">
+            <form method="post" enctype="multipart/form-data" id="motoristaForm">
                 {% csrf_token %}
                 
                 {% if form.non_field_errors %}
@@ -26,6 +26,7 @@
                 {% endif %}
 
                 <h5 class="text-muted mb-3 pb-2 border-bottom">Identificación Personal</h5>
+                
                 <div class="row">
                   <div class="col-md-6">
                     <div class="mb-3">
@@ -92,13 +93,22 @@
                 </div>
 
                 <div class="row">
-                  <div class="col-md-6">
-                    <div class="mb-3">
-                      <label class="form-label">{{ form.comuna.label }}</label>
-                      {{ form.comuna.as_widget }}
-                      {% if form.comuna.errors %}<div class="text-danger">{{ form.comuna.errors }}</div>{% endif %}
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">{{ form.region.label }}</label>
+                        {{ form.region.as_widget }}
                     </div>
-                  </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">{{ form.provincia.label }}</label>
+                        {{ form.provincia.as_widget }}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">{{ form.comuna.label }}</label>
+                        {{ form.comuna.as_widget }}
+                        {% if form.comuna.errors %}<div class="text-danger">{{ form.comuna.errors }}</div>{% endif %}
+                    </div>
+                </div>
+
+                <div class="row">
                   <div class="col-md-6">
                     <div class="mb-3">
                       <label class="form-label">{{ form.telefono.label }}</label>
@@ -106,12 +116,13 @@
                       {% if form.telefono.errors %}<div class="text-danger">{{ form.telefono.errors }}</div>{% endif %}
                     </div>
                   </div>
-                </div>
-
-                <div class="mb-3">
-                  <label class="form-label">{{ form.correo.label }}</label>
-                  {{ form.correo.as_widget }}
-                  {% if form.correo.errors %}<div class="text-danger">{{ form.correo.errors }}</div>{% endif %}
+                  <div class="col-md-6">
+                    <div class="mb-3">
+                      <label class="form-label">{{ form.correo.label }}</label>
+                      {{ form.correo.as_widget }}
+                      {% if form.correo.errors %}<div class="text-danger">{{ form.correo.errors }}</div>{% endif %}
+                    </div>
+                  </div>
                 </div>
 
                 <div class="mb-3 form-check">
@@ -163,13 +174,44 @@
     </div>
 </div>
 
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        document.querySelectorAll('select').forEach(function(select) {
-            select.classList.add('form-select');
+    // URLs desde Django
+    const urlProvincias = "{% url 'ajax_load_provincias' %}";
+    const urlComunas = "{% url 'ajax_load_comunas' %}";
+
+    // 1. Cambio en REGIÓN
+    $("#id_region").change(function () {
+        const regionId = $(this).val();
+        
+        $.ajax({
+            url: urlProvincias,
+            data: { 'region': regionId },
+            success: function (data) {
+                let html_data = '<option value="">---------</option>';
+                data.forEach(function (provincia) {
+                    html_data += `<option value="${provincia.idProvincia}">${provincia.nombreProvincia}</option>`;
+                });
+                $("#id_provincia").html(html_data);
+                $("#id_comuna").html('<option value="">---------</option>');
+            }
         });
-        document.querySelectorAll('input[type="text"], input[type="email"]').forEach(function(input) {
-            input.classList.add('form-control');
+    });
+
+    // 2. Cambio en PROVINCIA
+    $("#id_provincia").change(function () {
+        const provinciaId = $(this).val();
+
+        $.ajax({
+            url: urlComunas,
+            data: { 'provincia': provinciaId },
+            success: function (data) {
+                let html_data = '<option value="">---------</option>';
+                data.forEach(function (comuna) {
+                    html_data += `<option value="${comuna.idComuna}">${comuna.nombreComuna}</option>`;
+                });
+                $("#id_comuna").html(html_data);
+            }
         });
     });
 </script>

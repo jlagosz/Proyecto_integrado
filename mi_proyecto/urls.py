@@ -68,6 +68,10 @@ urlpatterns = [
     # --- REPORTES ---
     path('movimientos/reportes/', views.ReporteMovimientosView.as_view(), name='reporte_movimientos'),
     path('movimientos/reportes/pdf/', views.ExportarReportePDFView.as_view(), name='reporte_pdf'),
+
+    # --- AJAX SELECTS DEPENDIENTES ---
+    path('ajax/load-provincias/', views.load_provincias, name='ajax_load_provincias'),
+    path('ajax/load-comunas/', views.load_comunas, name='ajax_load_comunas'),
 ]
 
 if settings.DEBUG:

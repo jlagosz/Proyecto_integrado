@@ -18,7 +18,7 @@
         </div>
 
         <div class="form-card-body">
-            <form method="post" enctype="multipart/form-data">
+            <form method="post" enctype="multipart/form-data" id="farmaciaForm">
                 {% csrf_token %}
                 
                 {% if form.non_field_errors %}
@@ -41,16 +41,25 @@
                 </div>
 
                 <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">{{ form.direccion.label }}</label>
-                        {{ form.direccion.as_widget }}
-                        {% if form.direccion.errors %}<div class="text-danger">{{ form.direccion.errors }}</div>{% endif %}
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">{{ form.region.label }}</label>
+                        {{ form.region.as_widget }}
                     </div>
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">{{ form.provincia.label }}</label>
+                        {{ form.provincia.as_widget }}
+                    </div>
+                    <div class="col-md-4 mb-3">
                         <label class="form-label">{{ form.comuna.label }}</label>
                         {{ form.comuna.as_widget }}
                         {% if form.comuna.errors %}<div class="text-danger">{{ form.comuna.errors }}</div>{% endif %}
                     </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">{{ form.direccion.label }}</label>
+                    {{ form.direccion.as_widget }}
+                    {% if form.direccion.errors %}<div class="text-danger">{{ form.direccion.errors }}</div>{% endif %}
                 </div>
 
                 <hr class="my-4">
@@ -98,10 +107,44 @@
     </div>
 </div>
 
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        document.querySelectorAll('select').forEach(function(select) {
-            select.classList.add('form-select');
+    // URLs desde Django
+    const urlProvincias = "{% url 'ajax_load_provincias' %}";
+    const urlComunas = "{% url 'ajax_load_comunas' %}";
+
+    // 1. Cambio en REGIÓN
+    $("#id_region").change(function () {
+        const regionId = $(this).val();
+        
+        $.ajax({
+            url: urlProvincias,
+            data: { 'region': regionId },
+            success: function (data) {
+                let html_data = '<option value="">---------</option>';
+                data.forEach(function (provincia) {
+                    html_data += `<option value="${provincia.idProvincia}">${provincia.nombreProvincia}</option>`;
+                });
+                $("#id_provincia").html(html_data);
+                $("#id_comuna").html('<option value="">---------</option>');
+            }
+        });
+    });
+
+    // 2. Cambio en PROVINCIA
+    $("#id_provincia").change(function () {
+        const provinciaId = $(this).val();
+
+        $.ajax({
+            url: urlComunas,
+            data: { 'provincia': provinciaId },
+            success: function (data) {
+                let html_data = '<option value="">---------</option>';
+                data.forEach(function (comuna) {
+                    html_data += `<option value="${comuna.idComuna}">${comuna.nombreComuna}</option>`;
+                });
+                $("#id_comuna").html(html_data);
+            }
         });
     });
 </script>

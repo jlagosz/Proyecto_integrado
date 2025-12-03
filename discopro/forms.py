@@ -4,7 +4,7 @@ from .models import (
     Farmacia, Motorista, Moto, ContactoEmergencia, 
     AsignacionFarmacia, AsignacionMoto, Documentacion, DocumentacionMoto,
     Mantenimiento, TipoMovimiento, Movimiento,
-    Usuario, Rol
+    Usuario, Rol, Region, Provincia, Comuna
 )
 
 # --- WIDGETS NATIVOS ---
@@ -102,12 +102,25 @@ class UsuarioForm(forms.ModelForm):
         return user
 
 # --- FORMULARIOS MODULOS ---
-
+# --- Farmacia ---
 class FarmaciaForm(forms.ModelForm):
+    region = forms.ModelChoiceField(
+        queryset=Region.objects.all(),
+        label="Región",
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        required=False
+    )
+    provincia = forms.ModelChoiceField(
+        queryset=Provincia.objects.none(),
+        label="Provincia",
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        required=False
+    )
+
     class Meta:
         model = Farmacia
         fields = [
-            'nombre', 'direccion', 'comuna', 
+            'nombre', 'direccion', 'region', 'provincia', 'comuna', 
             'horario_apertura', 'horario_cierre', 'telefono', 
             'latitud', 'longitud'
         ]
@@ -122,14 +135,57 @@ class FarmaciaForm(forms.ModelForm):
             'horario_cierre': NativeTimeInput(),
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        self.fields['comuna'].queryset = Comuna.objects.none()
+
+        if 'region' in self.data:
+            try:
+                region_id = int(self.data.get('region'))
+                self.fields['provincia'].queryset = Provincia.objects.filter(region_id=region_id).order_by('nombreProvincia')
+            except (ValueError, TypeError):
+                pass
+        
+        if 'provincia' in self.data:
+            try:
+                provincia_id = int(self.data.get('provincia'))
+                self.fields['comuna'].queryset = Comuna.objects.filter(provincia_id=provincia_id).order_by('nombreComuna')
+            except (ValueError, TypeError):
+                pass
+
+        if self.instance.pk and self.instance.comuna:
+            self.fields['comuna'].queryset = Comuna.objects.filter(provincia=self.instance.comuna.provincia)
+            self.fields['provincia'].queryset = Provincia.objects.filter(region=self.instance.comuna.provincia.region)
+        
+            self.initial['comuna'] = self.instance.comuna
+            self.initial['provincia'] = self.instance.comuna.provincia
+            self.initial['region'] = self.instance.comuna.provincia.region
+
 class MotoristaForm(forms.ModelForm):
-    """Formulario para la gestión de Motoristas."""
+    # Campos "ficticios" para el filtrado visual
+    region = forms.ModelChoiceField(
+        queryset=Region.objects.all(),
+        label="Región",
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        required=False
+    )
+    provincia = forms.ModelChoiceField(
+        queryset=Provincia.objects.none(),
+        label="Provincia",
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        required=False
+    )
+
     class Meta:
         model = Motorista
         fields = [
             'codigo',
             'rut', 'pasaporte', 'nombres', 'apellido_paterno', 'apellido_materno',
-            'fecha_nacimiento', 'direccion', 'comuna', 'telefono', 'correo',
+            'fecha_nacimiento', 
+            'region', 'provincia', 
+            'comuna', 'direccion', 
+            'telefono', 'correo',
             'incluye_moto_personal',
             'estado',
             'licencia_conducir', 'fecha_ultimo_control', 'fecha_proximo_control'
@@ -152,6 +208,34 @@ class MotoristaForm(forms.ModelForm):
             'fecha_proximo_control': NativeDateInput(attrs={'class': 'form-control'}),
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+
+        self.fields['comuna'].queryset = Comuna.objects.none()
+
+        if 'region' in self.data:
+            try:
+                region_id = int(self.data.get('region'))
+                self.fields['provincia'].queryset = Provincia.objects.filter(region_id=region_id).order_by('nombreProvincia')
+            except (ValueError, TypeError):
+                pass
+        
+        if 'provincia' in self.data:
+            try:
+                provincia_id = int(self.data.get('provincia'))
+                self.fields['comuna'].queryset = Comuna.objects.filter(provincia_id=provincia_id).order_by('nombreComuna')
+            except (ValueError, TypeError):
+                pass
+
+        if self.instance.pk and self.instance.comuna:
+            self.fields['comuna'].queryset = Comuna.objects.filter(provincia=self.instance.comuna.provincia)
+            self.fields['provincia'].queryset = Provincia.objects.filter(region=self.instance.comuna.provincia.region)
+            
+            self.initial['comuna'] = self.instance.comuna
+            self.initial['provincia'] = self.instance.comuna.provincia
+            self.initial['region'] = self.instance.comuna.provincia.region
+
 class MotoForm(forms.ModelForm):
     """Formulario para la gestión de Motos."""
     class Meta:
@@ -169,25 +253,6 @@ class MotoForm(forms.ModelForm):
             'numero_chasis': forms.TextInput(attrs={'class': 'form-control'}),
             'motor': forms.TextInput(attrs={'class': 'form-control'}),
             'propietario': forms.Select(attrs={'class': 'form-select'}),
-        }
-class AsignacionFarmaciaForm(forms.ModelForm):
-    """Formulario para asignar una Farmacia a un Motorista."""
-    class Meta:
-        model = AsignacionFarmacia
-        fields = ['farmacia', 'observaciones']
-        widgets = {
-            'farmacia': forms.Select(attrs={'class': 'form-select'}),
-            'observaciones': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-        }
-
-class AsignacionMotoForm(forms.ModelForm):
-    """Formulario para asignar una Moto a un Motorista."""
-    class Meta:
-        model = AsignacionMoto
-        fields = ['motorista', 'estado']
-        widgets = {
-            'motorista': forms.Select(attrs={'class': 'form-select'}),
-            'estado': forms.TextInput(attrs={'class': 'form-control'}),
         }
 
 class ContactoEmergenciaForm(forms.ModelForm):
@@ -234,6 +299,7 @@ class MantenimientoForm(forms.ModelForm):
             'factura': forms.FileInput(attrs={'class': 'form-control'}),
         }
 
+# --- Movimientos ---
 class TipoMovimientoForm(forms.ModelForm):
     """Formulario para gestionar los tipos de movimiento."""
     class Meta:
@@ -276,6 +342,26 @@ class MovimientoForm(forms.ModelForm):
             # Es un padre: Es obligatorio
             self.fields['numero_despacho'].required = True
 
+# --- ASIGNACIONES ---
+class AsignacionFarmaciaForm(forms.ModelForm):
+    """Formulario para asignar una Farmacia a un Motorista."""
+    class Meta:
+        model = AsignacionFarmacia
+        fields = ['farmacia', 'observaciones']
+        widgets = {
+            'farmacia': forms.Select(attrs={'class': 'form-select'}),
+            'observaciones': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        }
+
+class AsignacionMotoForm(forms.ModelForm):
+    """Formulario para asignar una Moto a un Motorista."""
+    class Meta:
+        model = AsignacionMoto
+        fields = ['motorista', 'estado']
+        widgets = {
+            'motorista': forms.Select(attrs={'class': 'form-select'}),
+            'estado': forms.TextInput(attrs={'class': 'form-control'}),
+        }
     
 class LoginForm(forms.Form):
     """Formulario simple para el inicio de sesión."""

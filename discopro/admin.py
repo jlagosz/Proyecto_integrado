@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin
 from . import models
 
 # --- Modelos Geográficos ---
@@ -36,6 +37,31 @@ class UsuarioAdmin(admin.ModelAdmin):
     list_display = ('nombres', 'apellidos', 'rut', 'correo', 'rol', 'estado')
     list_filter = ('rol', 'estado')
     search_fields = ('nombres', 'apellidos', 'rut')
+
+# --- Modelos de Usuario/Rol (Configuración UserAdmin) ---
+@admin.register(models.Rol)
+class RolAdmin(admin.ModelAdmin):
+    list_display = ('idRol', 'nombreRol')
+
+@admin.register(models.Usuario)
+class UsuarioAdmin(UserAdmin):
+    """
+    Configuración personalizada para el modelo de Usuario heredado de AbstractUser.
+    Permite ver los campos custom (rut, rol, telefono) en el panel de admin.
+    """
+    list_display = ('username', 'first_name', 'last_name', 'email', 'rol', 'is_staff', 'is_active')
+    list_filter = ('rol', 'is_staff', 'is_active', 'groups')
+    search_fields = ('username', 'first_name', 'last_name', 'email', 'rut')
+    
+    # Agregamos los campos personalizados a los fieldsets de edición
+    fieldsets = UserAdmin.fieldsets + (
+        ('Información Adicional', {'fields': ('rut', 'telefono', 'rol')}),
+    )
+    
+    # Agregamos los campos personalizados al formulario de creación
+    add_fieldsets = UserAdmin.add_fieldsets + (
+        ('Información Adicional', {'fields': ('rut', 'telefono', 'rol')}),
+    )
 
 # --- Modelos Principales ---
 @admin.register(models.Farmacia)

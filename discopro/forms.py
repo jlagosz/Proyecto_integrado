@@ -1,4 +1,5 @@
 from django import forms
+from django.contrib.auth.forms import UserCreationForm, UserChangeForm, AuthenticationForm
 from .models import (
     Farmacia, Motorista, Moto, ContactoEmergencia, 
     AsignacionFarmacia, AsignacionMoto, Documentacion, DocumentacionMoto,
@@ -27,7 +28,80 @@ class NativeDateTimeInput(forms.DateTimeInput):
     def __init__(self, attrs=None, format='%Y-%m-%dT%H:%M'):
         super().__init__(attrs, format=format)
         self.attrs['class'] = 'form-control'
-# --- FORMULARIOS ---
+
+# --- FORMULARIOS DE AUTENTICACIÓN ---
+
+class CustomLoginForm(AuthenticationForm):
+    """Formulario de inicio de sesión."""
+    username = forms.CharField(
+        label="Usuario",
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombre de usuario', 'autofocus': True})
+    )
+    password = forms.CharField(
+        label="Contraseña",
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Contraseña'})
+    )
+
+class UsuarioForm(forms.ModelForm):
+    """
+    Formulario para Crear/Editar usuarios en el sistema.
+    Utiliza los campos nativos de Django (username, first_name, last_name, email).
+    """
+    password = forms.CharField(
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+        required=False,
+        help_text="Deja en blanco para mantener la contraseña actual."
+    )
+    confirmar_contrasena = forms.CharField(
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+        required=False,
+        label="Confirmar contraseña"
+    )
+
+    class Meta:
+        model = Usuario
+        fields = [
+            'username', 'first_name', 'last_name', 'rut', 'email', 'telefono', 
+            'rol', 'is_active', 'password', 'confirmar_contrasena'
+        ]
+        widgets = {
+            'username': forms.TextInput(attrs={'class': 'form-control'}),
+            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'rut': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'telefono': forms.TextInput(attrs={'class': 'form-control'}),
+            'rol': forms.Select(attrs={'class': 'form-select'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not self.instance.pk:
+            self.fields['password'].required = True
+            self.fields['confirmar_contrasena'].required = True
+            self.fields['password'].help_text = "Ingresa una contraseña segura."
+
+    def clean(self):
+        cleaned_data = super().clean()
+        password = cleaned_data.get("password")
+        confirmar_contrasena = cleaned_data.get("confirmar_contrasena")
+
+        if password or (not self.instance.pk):
+            if password != confirmar_contrasena:
+                raise forms.ValidationError("Las contraseñas no coinciden.")
+        return cleaned_data
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        password = self.cleaned_data.get("password")
+        if password:
+            user.set_password(password) 
+        if commit:
+            user.save()
+        return user
+
+# --- FORMULARIOS MODULOS ---
 
 class FarmaciaForm(forms.ModelForm):
     class Meta:
@@ -195,76 +269,13 @@ class MovimientoForm(forms.ModelForm):
         self.fields['motorista_asignado'].required = False
         
         if self.initial.get('movimiento_padre'):
-            # Es un hijo: Ocultamos numero_despacho, no lo necesitamos
+            # Es un hijo: Ocultamos numero_despacho
             self.fields['numero_despacho'].widget = forms.HiddenInput()
             self.fields['numero_despacho'].required = False
         else:
             # Es un padre: Es obligatorio
             self.fields['numero_despacho'].required = True
 
-class UsuarioForm(forms.ModelForm):
-    """
-    Formulario para la gestión de Usuarios del sistema.
-    Incluye validación y hashing automático de contraseñas.
-    """
-    contrasena = forms.CharField(
-        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
-        required=False,
-        help_text="Déjalo en blanco para no cambiar la contraseña."
-    )
-    
-    confirmar_contrasena = forms.CharField(
-        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
-        required=False,
-        label="Confirmar contraseña"
-    )
-
-    class Meta:
-        model = Usuario
-        fields = [
-            'rut', 'nombres', 'apellidos', 'correo', 'telefono', 
-            'estado', 'rol', 'nombreUsuario', 'contrasena', 'confirmar_contrasena'
-        ]
-        widgets = {
-            'rut': forms.TextInput(attrs={'class': 'form-control'}),
-            'nombres': forms.TextInput(attrs={'class': 'form-control'}),
-            'apellidos': forms.TextInput(attrs={'class': 'form-control'}),
-            'correo': forms.EmailInput(attrs={'class': 'form-control'}),
-            'telefono': forms.TextInput(attrs={'class': 'form-control'}),
-            'estado': forms.Select(attrs={'class': 'form-select'}),
-            'rol': forms.Select(attrs={'class': 'form-select'}),
-            'nombreUsuario': forms.TextInput(attrs={'class': 'form-control'}),
-        }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if not self.instance.pk:
-            self.fields['contrasena'].required = True
-            self.fields['confirmar_contrasena'].required = True
-            self.fields['contrasena'].help_text = "Ingresa una contraseña segura."
-
-    def clean(self):
-        """Valida que las contraseñas coincidan."""
-        cleaned_data = super().clean()
-        contrasena = cleaned_data.get("contrasena")
-        confirmar_contrasena = cleaned_data.get("confirmar_contrasena")
-
-        if contrasena or (not self.instance.pk):
-            if contrasena != confirmar_contrasena:
-                raise forms.ValidationError("Las contraseñas no coinciden.")
-        return cleaned_data
-
-    def save(self, commit=True):
-        """Intercepta el guardado para encriptar la contraseña."""
-        usuario = super().save(commit=False)
-        contrasena = self.cleaned_data.get("contrasena")
-
-        if contrasena:
-            usuario.set_password(contrasena) 
-
-        if commit:
-            usuario.save()
-        return usuario
     
 class LoginForm(forms.Form):
     """Formulario simple para el inicio de sesión."""

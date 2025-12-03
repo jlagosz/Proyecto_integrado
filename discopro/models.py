@@ -2,6 +2,7 @@ from django.db import models
 from django.utils import timezone
 from django.urls import reverse
 from django.contrib.auth.hashers import make_password, check_password
+from django.contrib.auth.models import AbstractUser
 
 # ---  Modelos Geográficos ---
 class Region(models.Model):
@@ -38,26 +39,17 @@ class Rol(models.Model):
     def __str__(self):
         return self.nombreRol
 
-class Usuario(models.Model):
-    ESTADO_ACTIVO = 'Activo'
-    ESTADO_INACTIVO = 'Inactivo'
-    ESTADO_CHOICES = [
-        (ESTADO_ACTIVO, 'Activo'),
-        (ESTADO_INACTIVO, 'Inactivo'),
-    ]
-    idUsuario = models.AutoField(primary_key=True)
-    rut = models.CharField(max_length=12, unique=True)
-    nombres = models.CharField(max_length=100)
-    apellidos = models.CharField(max_length=100)
-    correo = models.EmailField(unique=True)
-    telefono = models.CharField(max_length=20)
-    estado = models.CharField(
-        max_length=20, 
-        choices=ESTADO_CHOICES,
-        default=ESTADO_ACTIVO
-    )
-    rol = models.ForeignKey(Rol, on_delete=models.PROTECT)
+class Usuario(AbstractUser):
+    rut = models.CharField(max_length=12, unique=True, null=True, blank=True)
+    telefono = models.CharField(max_length=20, null=True, blank=True)
+    rol = models.ForeignKey(Rol, on_delete=models.PROTECT, null=True, blank=True)
+    class Meta:
+        verbose_name = 'Usuario'
+        verbose_name_plural = 'Usuarios'
 
+    def __str__(self):
+        return f"{self.first_name} {self.last_name} ({self.username})"
+    
     # --- CAMPOS DE LOGIN ---
     nombreUsuario = models.CharField(max_length=100, unique=True, verbose_name="Nombre de Usuario")
     contrasena = models.CharField(max_length=128, verbose_name="Contraseña")

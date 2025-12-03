@@ -5,10 +5,10 @@ import django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'mi_proyecto.settings')
 django.setup()
 
-from discopro.models import Region, Provincia, Comuna
+
+from discopro.models import Region, Provincia, Comuna, TipoMovimiento
 
 # --- DATOS DE CHILE (Estructura: Región -> Provincias -> Comunas) ---
-
 data_chile = {
     "Región de Arica y Parinacota": {
         "Arica": ["Arica", "Camarones"],
@@ -48,25 +48,49 @@ data_chile = {
         "Arauco": ["Lebu", "Arauco", "Cañete", "Contulmo", "Curanilahue", "Los Álamos", "Tirúa"],
         "Biobío": ["Los Ángeles", "Antuco", "Cabrero", "Laja", "Mulchén", "Nacimiento", "Negrete", "Quilaco", "Quilleco", "San Rosendo", "Santa Bárbara", "Tucapel", "Yumbel", "Alto Biobío"]
     }
-    
 }
 
+# --- DATOS DE TIPOS DE MOVIMIENTO ---
+data_tipos_movimiento = [
+    {
+        "nombre": "Directo", 
+        "descripcion": "Motorista va desde farmacia hasta el destino de entrega"
+    },
+    {
+        "nombre": "Receta médica", 
+        "descripcion": "Se programa una visita antes para recepcionar la receta medica"
+    },
+    {
+        "nombre": "Fallido", 
+        "descripcion": "Por razones externas no se pudo concretar la entrega, se debe reasignar otro motorista"
+    },
+    {
+        "nombre": "Reenvío", 
+        "descripcion": "Ante entrega errónea respecto al destinatario se vuelve a realizar el envío de los productos"
+    },
+    {
+        "nombre": "Traspaso", 
+        "descripcion": "Se le ordena al motorista ir a buscar a otro local el pedido por falta de stock"
+    }
+]
+
 def cargar_datos():
-    print("Iniciando carga de datos geográficos...")
+    print("--------------------------------------------------")
+    print("Iniciando script de carga masiva...")
+    print("--------------------------------------------------")
     
+    # --- CARGA GEOGRÁFICA ---
+    print(">>> Cargando Regiones, Provincias y Comunas...")
     contador_reg = 0
     contador_prov = 0
     contador_com = 0
 
     for nombre_region, provincias in data_chile.items():
-        # Crear o recuperar Región
         region_obj, created = Region.objects.get_or_create(nombreRegion=nombre_region)
         if created:
             contador_reg += 1
-            print(f" [+] Región creada: {nombre_region}")
 
         for nombre_provincia, comunas in provincias.items():
-            # Crear o recuperar Provincia vinculada a la Región
             provincia_obj, created = Provincia.objects.get_or_create(
                 nombreProvincia=nombre_provincia,
                 region=region_obj
@@ -75,7 +99,6 @@ def cargar_datos():
                 contador_prov += 1
 
             for nombre_comuna in comunas:
-                # Crear o recuperar Comuna vinculada a la Provincia
                 comuna_obj, created = Comuna.objects.get_or_create(
                     nombreComuna=nombre_comuna,
                     provincia=provincia_obj
@@ -83,12 +106,29 @@ def cargar_datos():
                 if created:
                     contador_com += 1
     
-    print("-" * 50)
-    print(f"PROCESO TERMINADO EXITOSAMENTE.")
-    print(f"Regiones agregadas: {contador_reg}")
-    print(f"Provincias agregadas: {contador_prov}")
-    print(f"Comunas agregadas: {contador_com}")
-    print("-" * 50)
+    # --- CARGA TIPOS DE MOVIMIENTO ---
+    print(">>> Cargando Tipos de Movimiento Logístico...")
+    contador_tipos = 0
+    
+    for item in data_tipos_movimiento:
+        tipo_obj, created = TipoMovimiento.objects.get_or_create(
+            nombre=item["nombre"],
+            defaults={"descripcion": item["descripcion"]} 
+        )
+        if created:
+            contador_tipos += 1
+            print(f" [+] Tipo creado: {item['nombre']}")
+        else:
+            print(f" [.] Tipo ya existente: {item['nombre']}")
+
+    print("\n" + "=" * 50)
+    print(f"RESUMEN DE CARGA")
+    print("=" * 50)
+    print(f"Regiones nuevas: {contador_reg}")
+    print(f"Provincias nuevas: {contador_prov}")
+    print(f"Comunas nuevas:    {contador_com}")
+    print(f"Tipos Movimiento:  {contador_tipos}")
+    print("=" * 50)
 
 if __name__ == '__main__':
     cargar_datos()

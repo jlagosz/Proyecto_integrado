@@ -117,16 +117,13 @@ class UsuarioForm(forms.ModelForm):
         p2 = cleaned_data.get('confirmar_contrasena')
         
         if p1 or p2:
+            # 1. Verificar coincidencia
             if p1 != p2:
                 self.add_error('confirmar_contrasena', "Las contraseñas no coinciden.")
             else:
-                # --- AGREGA ESTE PRINT ---
-                print(f"DEBUG: Validando password: {p1}") 
                 try:
                     validate_password(p1, self.instance)
                 except ValidationError as error:
-                    # --- AGREGA ESTE PRINT ---
-                    print(f"DEBUG: Error encontrado: {error}")
                     self.add_error('password', error)
                     
         return cleaned_data
@@ -383,17 +380,31 @@ class MovimientoForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super().clean()
         motorista = cleaned_data.get('motorista_asignado')
-        fecha_movimiento = cleaned_data.get('fecha_movimiento')
-        if not motorista or not fecha_movimiento:
-            return cleaned_data
-        movimientos_activos = Movimiento.objects.filter(
-            motorista_asignado=motorista,
-            estado='pendiente' 
-        ).exclude(pk=self.instance.pk) 
+        estado = cleaned_data.get('estado') 
+        movimiento_padre = cleaned_data.get('movimiento_padre')
 
-        if movimientos_activos.exists():
-            raise forms.ValidationError(f"El motorista {motorista} ya tiene un despacho pendiente. Debe completarlo antes de asignar uno nuevo.")
-        
+        if not motorista or estado != 'pendiente':
+            return cleaned_data
+        conflictos = Movimiento.objects.filter(
+            motorista_asignado=motorista,
+            estado='pendiente'
+        )
+        if self.instance.pk:
+            conflictos = conflictos.exclude(pk=self.instance.pk)
+        if movimiento_padre:
+            conflictos = conflictos.exclude(pk=movimiento_padre.pk)
+            conflictos = conflictos.exclude(movimiento_padre=movimiento_padre)
+
+        if conflictos.exists():
+            ocupado_en = conflictos.first()
+            nro = ocupado_en.numero_despacho
+            if not nro and ocupado_en.movimiento_padre:
+                nro = f"{ocupado_en.movimiento_padre.numero_despacho} (Tramo)"
+            
+            raise forms.ValidationError(
+                f"El motorista {motorista} ya tiene un despacho pendiente activo ({nro}). Termine ese trabajo antes de asignarle uno nuevo distinto."
+            )
+
         return cleaned_data
 
     def clean_origen(self):

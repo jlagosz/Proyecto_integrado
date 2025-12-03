@@ -26,7 +26,6 @@
                 {% endif %}
 
                 <h5 class="text-muted mb-3 pb-2 border-bottom">Identificación Personal</h5>
-                
                 <div class="row">
                   <div class="col-md-6">
                     <div class="mb-3">
@@ -166,11 +165,9 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Asegura estilos en selects
         document.querySelectorAll('select').forEach(function(select) {
             select.classList.add('form-select');
         });
-        // Asegura estilos en inputs de texto (por si forms.py no cargó)
         document.querySelectorAll('input[type="text"], input[type="email"]').forEach(function(input) {
             input.classList.add('form-control');
         });

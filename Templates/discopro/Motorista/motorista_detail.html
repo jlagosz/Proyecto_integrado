@@ -6,7 +6,7 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h1 class="lista-h1">{{ motorista }}</h1>
     <div>
-        <a href="{% url 'motorista_modificar' motorista.pk %}" class="btn btn-warning">Editar</a>
+        <a href="{% url 'motorista_editar' motorista.pk %}" class="btn btn-warning">Editar</a>
         <a href="{% url 'motorista_lista' %}" class="btn btn-secondary">Volver al listado</a>
     </div>
 </div>
@@ -87,7 +87,7 @@
         <div class="card mb-4">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <strong>Contactos de Emergencia</strong>
-                <a href="{% url 'crear_contacto_emergencia' motorista.pk %}" class="btn btn-sm btn-outline-secondary">Añadir</a>
+                <a href="{% url 'contacto_crear' motorista.pk %}" class="btn btn-sm btn-outline-secondary">Añadir</a>
             </div>
             <ul class="list-group list-group-flush">
                 {% for contacto in contactos %}
@@ -96,7 +96,7 @@
                             <strong>{{ contacto.nombreCompleto }}</strong> ({{ contacto.parentesco }})<br>
                             <i class="bi bi-telephone"></i> {{ contacto.telefono }}
                         </div>
-                        <a href="{% url 'eliminar_contacto_emergencia' contacto.pk %}" class="btn btn-sm btn-outline-danger" title="Eliminar contacto">
+                        <a href="{% url 'contacto_eliminar' contacto.pk %}" class="btn btn-sm btn-outline-danger" title="Eliminar contacto">
                             <i class="bi bi-trash"></i>
                         </a>
                     </li>

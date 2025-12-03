@@ -26,17 +26,17 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link {% if 'usuario' in request.path %}active{% endif %}" href="{% url 'usuario_lista' %}">
+                <a class="nav-link {% if 'usuarios' in request.path %}active{% endif %}" href="{% url 'usuario_lista' %}">
                     <i class="bi bi-people-fill"></i> Usuarios
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link {% if 'farmacia' in request.path %}active{% endif %}" href="{% url 'farmacia_lista' %}">
+                <a class="nav-link {% if 'farmacias' in request.path %}active{% endif %}" href="{% url 'farmacia_lista' %}">
                     <i class="bi bi-hospital"></i> Farmacias
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link {% if 'motorista' in request.path %}active{% endif %}" href="{% url 'motorista_lista' %}">
+                <a class="nav-link {% if 'motoristas' in request.path %}active{% endif %}" href="{% url 'motorista_lista' %}">
                     <i class="bi bi-person-badge"></i> Motoristas
                 </a>
             </li>
@@ -46,13 +46,8 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link {% if 'movimiento' in request.path %}active{% endif %}" href="{% url 'movimiento_lista' %}">
+                <a class="nav-link {% if 'movimientos' in request.path %}active{% endif %}" href="{% url 'movimiento_lista' %}">
                     <i class="bi bi-arrows-move"></i> Movimientos
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#">
-                    <i class="bi bi-exclamation-triangle-fill"></i> Incidencias
                 </a>
             </li>
             <li class="nav-item" style="margin-top: 20px; border-top: 1px solid #465a70; padding-top: 10px;">
@@ -65,8 +60,6 @@
 
     <div class="main-content">
         <main>
-            
-            <!-- ===== BLOQUE DE MENSAJES  ===== -->
             {% if messages %}
                 <div class="container-fluid" style="padding: 0;">
                     {% for message in messages %}
@@ -77,8 +70,6 @@
                     {% endfor %}
                 </div>
             {% endif %}
-            <!-- ===== FIN DEL BLOQUE DE MENSAJES ===== -->
-
             {% block content %}
             {% endblock %}
         </main>

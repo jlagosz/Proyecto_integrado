@@ -23,29 +23,31 @@ urlpatterns = [
     # --- CRUD FARMACIAS ---
     path('farmacias/', views.FarmaciaListView.as_view(), name='farmacia_lista'), 
     path('farmacias/crear/', views.FarmaciaCreateView.as_view(), name='farmacia_crear'),
-    path('farmacias/editar/<int:pk>/', views.FarmaciaUpdateView.as_view(), name='farmacia_modificar'),
+    path('farmacias/editar/<int:pk>/', views.FarmaciaUpdateView.as_view(), name='farmacia_editar'),
     path('farmacias/eliminar/<int:pk>/', views.FarmaciaDeleteView.as_view(), name='farmacia_eliminar'), 
-    path('farmacias/detalle/<int:pk>/', views.FarmaciaDetailView.as_view(), name='detalle_farmacia'),
+    path('farmacias/detalle/<int:pk>/', views.FarmaciaDetailView.as_view(), name='farmacia_detalle'),
     
     # --- CRUD MOTORISTAS ---
     path('motoristas/', views.MotoristaListView.as_view(), name='motorista_lista'),
-    path('motoristas/crear/', views.MotoristaCreateView.as_view(), name='agregar_motorista'),
-    path('motoristas/detalle/<int:pk>/', views.MotoristaDetailView.as_view(), name='detalle_motorista'),
-    path('motoristas/editar/<int:pk>/', views.MotoristaUpdateView.as_view(), name='motorista_modificar'),
+    path('motoristas/crear/', views.MotoristaCreateView.as_view(), name='motorista_crear'),
+    path('motoristas/detalle/<int:pk>/', views.MotoristaDetailView.as_view(), name='motorista_detalle'),
+    path('motoristas/editar/<int:pk>/', views.MotoristaUpdateView.as_view(), name='motorista_editar'),
     path('motoristas/eliminar/<int:pk>/', views.MotoristaDeleteView.as_view(), name='motorista_eliminar'),
-    path('motorista/<int:motorista_pk>/crear-contacto/', views.ContactoEmergenciaCreateView.as_view(), name='crear_contacto_emergencia'),
-    path('contacto/eliminar/<int:pk>/', views.ContactoEmergenciaDeleteView.as_view(), name='eliminar_contacto_emergencia'),
+    
+    # Contactos (Sub-recurso de motorista)
+    path('motorista/<int:motorista_pk>/crear-contacto/', views.ContactoEmergenciaCreateView.as_view(), name='contacto_crear'),
+    path('contacto/eliminar/<int:pk>/', views.ContactoEmergenciaDeleteView.as_view(), name='contacto_eliminar'),
     
     # --- CRUD MOTOS ---
     path('motos/', views.MotoListView.as_view(), name='moto_lista'),
     path('motos/crear/', views.MotoCreateView.as_view(), name='moto_crear'),
-    path('motos/detalle/<str:pk>/', views.MotoDetailView.as_view(), name='detalle_moto'),
-    path('motos/editar/<str:pk>/', views.MotoUpdateView.as_view(), name='moto_modificar'),
+    path('motos/detalle/<str:pk>/', views.MotoDetailView.as_view(), name='moto_detalle'),
+    path('motos/editar/<str:pk>/', views.MotoUpdateView.as_view(), name='moto_editar'),
     path('motos/eliminar/<str:pk>/', views.MotoDeleteView.as_view(), name='moto_eliminar'),
 
-     # --- DOCUMENTOS MOTOS ---
-    path('moto/<str:pk>/documentacion/', views.DocumentacionMotoUpdateView.as_view(), name='gestionar_documentacion_moto'),  
-    path('moto/<str:pk>/mantenimiento/crear/', views.MantenimientoCreateView.as_view(), name='crear_mantenimiento'),
+     # --- DOCUMENTOS Y MANTENIMIENTO ---
+    path('moto/<str:pk>/documentacion/', views.DocumentacionMotoUpdateView.as_view(), name='moto_documentacion'),  
+    path('moto/<str:pk>/mantenimiento/crear/', views.MantenimientoCreateView.as_view(), name='mantenimiento_crear'),
 
     # --- CRUD MOVIMIENTOS ---
     path('movimientos/', views.MovimientoListView.as_view(), name='movimiento_lista'),
@@ -55,17 +57,17 @@ urlpatterns = [
     path('movimientos/eliminar/<int:pk>/', views.MovimientoDeleteView.as_view(), name='movimiento_eliminar'),
     
     # --- CRUD TRAMOS ---
-    path('movimientos/detalle/<int:padre_pk>/crear-tramo/', views.TramoCreateView.as_view(), name='crear_tramo'),
+    path('movimientos/detalle/<int:padre_pk>/crear-tramo/', views.TramoCreateView.as_view(), name='tramo_crear'),
     path('tramos/editar/<int:pk>/', views.TramoUpdateView.as_view(), name='tramo_editar'),
     path('tramos/eliminar/<int:pk>/', views.TramoDeleteView.as_view(), name='tramo_eliminar'),
     
     # --- VISTAS DE ASIGNACIÓN ---
-    path('motorista/<int:motorista_pk>/asignar-farmacia/', views.AsignacionFarmaciaCreateView.as_view(), name='asignar_farmacia'),
-    path('moto/<str:moto_pk>/asignar-motorista/', views.AsignacionMotoCreateView.as_view(), name='asignar_moto_motorista'),
+    path('motorista/<int:motorista_pk>/asignar-farmacia/', views.AsignacionFarmaciaCreateView.as_view(), name='asignacion_farmacia_crear'),
+    path('moto/<str:moto_pk>/asignar-motorista/', views.AsignacionMotoCreateView.as_view(), name='asignacion_moto_crear'),
 
     # --- REPORTES ---
-    path('movimientos/reportes/', views.ReporteMovimientosView.as_view(), name='movimiento_reportes'),
-    path('movimientos/reportes/pdf/', views.ExportarReportePDFView.as_view(), name='movimiento_reporte_pdf'),
+    path('movimientos/reportes/', views.ReporteMovimientosView.as_view(), name='reporte_movimientos'),
+    path('movimientos/reportes/pdf/', views.ExportarReportePDFView.as_view(), name='reporte_pdf'),
 ]
 
 if settings.DEBUG:

@@ -240,7 +240,7 @@ def index(request: HttpRequest):
         'total_movimientos': total_movimientos,
         'usuario_logueado': usuario
     }
-    return render(request, "discopro/Main/Index.html", context)
+    return render(request, "discopro/Main/dashboard.html", context)
 
 # --- CRUD USUARIOS ---
 class UsuarioListView(LoginRequiredMixin, ListView):
@@ -291,7 +291,7 @@ class UsuarioDeleteView(LoginRequiredMixin, DeleteView):
 class FarmaciaListView(LoginRequiredMixin, ListView):
     """Lista las farmacias registradas y permite filtrar por ubicación."""
     model = Farmacia
-    template_name = 'discopro/Farmacia/Lista.html'
+    template_name = 'discopro/Farmacia/farmacia_list.html'
     context_object_name = 'farmacias'
 
     def get_queryset(self):
@@ -310,7 +310,7 @@ class FarmaciaCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
     """Registra una nueva farmacia."""
     model = Farmacia
     form_class = FarmaciaForm
-    template_name = 'discopro/Farmacia/agregar_editar.html'
+    template_name = 'discopro/Farmacia/farmacia_form.html'
     success_url = reverse_lazy('farmacia_lista')
     success_message = "Farmacia creada exitosamente."
 
@@ -318,7 +318,7 @@ class FarmaciaUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
     """Edita los datos de una farmacia."""
     model = Farmacia
     form_class = FarmaciaForm
-    template_name = 'discopro/Farmacia/agregar_editar.html'
+    template_name = 'discopro/Farmacia/farmacia_form.html'
     success_url = reverse_lazy('farmacia_lista')
     success_message = "Farmacia actualizada exitosamente."
 
@@ -335,7 +335,7 @@ class FarmaciaDeleteView(LoginRequiredMixin, DeleteView):
 class FarmaciaDetailView(LoginRequiredMixin, DetailView):
     """Muestra el detalle completo de una farmacia."""
     model = Farmacia
-    template_name = 'discopro/Farmacia/detalle.html'
+    template_name = 'discopro/Farmacia/farmacia_detail.html'
     context_object_name = 'farmacia'
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -348,7 +348,7 @@ class FarmaciaDetailView(LoginRequiredMixin, DetailView):
 class MotoristaListView(LoginRequiredMixin, ListView):
     """Lista los motoristas y muestra su farmacia actual mediante subconsulta."""
     model = Motorista
-    template_name = 'discopro/Motorista/ListarMotorista.html'
+    template_name = 'discopro/Motorista/motorista_list.html'
     context_object_name = 'motoristas'
 
     def get_queryset(self):
@@ -374,7 +374,7 @@ class MotoristaListView(LoginRequiredMixin, ListView):
 class MotoristaDetailView(LoginRequiredMixin, DetailView):
     """Muestra el detalle del motorista y su historial de asignaciones."""
     model = Motorista
-    template_name = 'discopro/Motorista/detalleMotorista.html'
+    template_name = 'discopro/Motorista/motorista_detail.html'
     context_object_name = 'motorista'
 
     def get_context_data(self, **kwargs):
@@ -394,14 +394,14 @@ class MotoristaDetailView(LoginRequiredMixin, DetailView):
 class MotoristaCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
     model = Motorista
     form_class = MotoristaForm
-    template_name = 'discopro/Motorista/agregar_editar.html'
+    template_name = 'discopro/Motorista/motorista_form.html'
     success_url = reverse_lazy('motorista_lista')
     success_message = "Motorista registrado exitosamente."
 
 class MotoristaUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
     model = Motorista
     form_class = MotoristaForm
-    template_name = 'discopro/Motorista/agregar_editar.html'
+    template_name = 'discopro/Motorista/motorista_form.html'
     success_url = reverse_lazy('motorista_lista')
     success_message = "Datos del motorista actualizados correctamente."
 
@@ -418,7 +418,7 @@ class MotoristaDeleteView(LoginRequiredMixin, DeleteView):
 class MotoListView(LoginRequiredMixin, ListView):
     """Lista las motos y muestra su motorista asignado actual."""
     model = Moto
-    template_name = 'discopro/Moto/ListarMoto.html'
+    template_name = 'discopro/Moto/moto_list.html'
     context_object_name = 'motos'
 
     def get_queryset(self):
@@ -442,7 +442,7 @@ class MotoListView(LoginRequiredMixin, ListView):
 class MotoDetailView(LoginRequiredMixin, DetailView):
     """Detalle de la moto, incluyendo historial y documentación."""
     model = Moto
-    template_name = 'discopro/Moto/detalleMoto.html'
+    template_name = 'discopro/Moto/moto_detail.html'
     context_object_name = 'moto'
 
     def get_context_data(self, **kwargs):
@@ -456,14 +456,14 @@ class MotoDetailView(LoginRequiredMixin, DetailView):
 class MotoCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
     model = Moto
     form_class = MotoForm
-    template_name = 'discopro/Moto/agregar_editar.html'
+    template_name = 'discopro/Moto/moto_form.html'
     success_url = reverse_lazy('moto_lista')
     success_message = "Moto registrada exitosamente."
 
 class MotoUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
     model = Moto
     form_class = MotoForm
-    template_name = 'discopro/Moto/agregar_editar.html'
+    template_name = 'discopro/Moto/moto_form.html'
     success_url = reverse_lazy('moto_lista')
     success_message = "Datos de la moto actualizados."
 
@@ -481,7 +481,7 @@ class AsignacionFarmaciaCreateView(LoginRequiredMixin, SuccessMessageMixin, Crea
     """Crea una asignación de farmacia para un motorista."""
     model = AsignacionFarmacia
     form_class = AsignacionFarmaciaForm
-    template_name = 'discopro/Asignaciones/asignar_farmacia.html'
+    template_name = 'discopro/Asignaciones/asignacion_farmacia_form.html'
     success_message = "Farmacia asignada correctamente."
     
     def get_context_data(self, **kwargs):
@@ -495,13 +495,13 @@ class AsignacionFarmaciaCreateView(LoginRequiredMixin, SuccessMessageMixin, Crea
         return super().form_valid(form)
         
     def get_success_url(self):
-        return reverse_lazy('detalle_motorista', kwargs={'pk': self.kwargs['motorista_pk']})
+        return reverse_lazy('motorista_detalle', kwargs={'pk': self.kwargs['motorista_pk']})
 
 class AsignacionMotoCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
     """Crea una asignación de moto a un motorista."""
     model = AsignacionMoto
     form_class = AsignacionMotoForm
-    template_name = 'discopro/Asignaciones/asignar_moto.html'
+    template_name = 'discopro/Asignaciones/asignacion_moto_form.html'
     success_message = "Moto asignada correctamente."
 
     def get_context_data(self, **kwargs):
@@ -515,13 +515,13 @@ class AsignacionMotoCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateVi
         return super().form_valid(form)
 
     def get_success_url(self):
-        return reverse_lazy('detalle_moto', kwargs={'pk': self.kwargs['moto_pk']})
+        return reverse_lazy('moto_detalle', kwargs={'pk': self.kwargs['moto_pk']})
     
 class DocumentacionMotoUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
     """Gestiona la documentación (permiso, seguro) de una moto."""
     model = DocumentacionMoto
     form_class = DocumentacionMotoForm
-    template_name = 'discopro/Moto/gestionar_documentacion.html'
+    template_name = 'discopro/Moto/documentacion_moto_form.html'
     success_message = "Documentación actualizada correctamente."
 
     def get_object(self, queryset=None):
@@ -538,13 +538,13 @@ class DocumentacionMotoUpdateView(LoginRequiredMixin, SuccessMessageMixin, Updat
         return context
 
     def get_success_url(self):
-        return reverse_lazy('detalle_moto', kwargs={'pk': self.object.moto_id})
+        return reverse_lazy('moto_detalle', kwargs={'pk': self.object.moto_id})
 
 class MantenimientoCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
     """Registra un mantenimiento para una moto."""
     model = Mantenimiento
     form_class = MantenimientoForm
-    template_name = 'discopro/Moto/crear_mantenimiento.html'
+    template_name = 'discopro/Moto/mantenimiento_form.html'
     success_message = "Mantenimiento registrado exitosamente."
 
     def get_context_data(self, **kwargs):
@@ -558,13 +558,13 @@ class MantenimientoCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateVie
         return super().form_valid(form)
 
     def get_success_url(self):
-        return reverse_lazy('detalle_moto', kwargs={'pk': self.object.moto.pk})
+        return reverse_lazy('moto_detalle', kwargs={'pk': self.object.moto.pk})
 
 class ContactoEmergenciaCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
     """Añade un contacto de emergencia a un motorista."""
     model = ContactoEmergencia
     form_class = ContactoEmergenciaForm
-    template_name = 'discopro/Motorista/crear_contacto.html'
+    template_name = 'discopro/Motorista/contacto_emergencia_form.html'
     success_message = "Contacto de emergencia añadido."
 
     def get_context_data(self, **kwargs):
@@ -578,14 +578,14 @@ class ContactoEmergenciaCreateView(LoginRequiredMixin, SuccessMessageMixin, Crea
         return super().form_valid(form)
 
     def get_success_url(self):
-        return reverse_lazy('detalle_motorista', kwargs={'pk': self.kwargs['motorista_pk']})
+        return reverse_lazy('motorista_detalle', kwargs={'pk': self.kwargs['motorista_pk']})
 
 class ContactoEmergenciaDeleteView(LoginRequiredMixin, DeleteView):
     model = ContactoEmergencia
     template_name = 'discopro/confirmar_eliminar.html'
     
     def get_success_url(self):
-        return reverse_lazy('detalle_motorista', kwargs={'pk': self.object.motorista.pk})
+        return reverse_lazy('motorista_detalle', kwargs={'pk': self.object.motorista.pk})
     
     def form_valid(self, form):
         messages.success(self.request, "Contacto eliminado exitosamente.")

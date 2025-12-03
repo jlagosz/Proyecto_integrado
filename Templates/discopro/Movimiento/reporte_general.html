@@ -17,7 +17,7 @@
                 <div class="card-body">
                     <h1 class="display-4 fw-bold">{{ total_hoy }}</h1>
                     <p class="card-text">Registrados el {{ now|date:"d/m/Y" }}</p>
-                    <a href="{% url 'movimiento_reporte_pdf' %}?tipo=diario" class="btn btn-light btn-sm w-100 fw-bold" target="_blank">
+                    <a href="{% url 'reporte_pdf' %}?tipo=diario" class="btn btn-light btn-sm w-100 fw-bold" target="_blank">
                         Descargar PDF Diario
                     </a>
                 </div>
@@ -29,7 +29,7 @@
                 <div class="card-body">
                     <h1 class="display-4 fw-bold">{{ total_mes }}</h1>
                     <p class="card-text">Acumulado mensual</p>
-                    <a href="{% url 'movimiento_reporte_pdf' %}?tipo=mensual" class="btn btn-light btn-sm w-100 fw-bold" target="_blank">
+                    <a href="{% url 'reporte_pdf' %}?tipo=mensual" class="btn btn-light btn-sm w-100 fw-bold" target="_blank">
                         Descargar PDF Mensual
                     </a>
                 </div>
@@ -41,7 +41,7 @@
                 <div class="card-body">
                     <h1 class="display-4 fw-bold">{{ total_anio }}</h1>
                     <p class="card-text">Acumulado anual</p>
-                    <a href="{% url 'movimiento_reporte_pdf' %}?tipo=anual" class="btn btn-light btn-sm w-100 fw-bold" target="_blank">
+                    <a href="{% url 'reporte_pdf' %}?tipo=anual" class="btn btn-light btn-sm w-100 fw-bold" target="_blank">
                         Descargar PDF Anual
                     </a>
                 </div>
@@ -110,7 +110,6 @@
                                 <td>
                                     <div class="progress" style="height: 20px;">
                                         {% widthratio item.total total_anio 100 as porcentaje %}
-                                        
                                         
                                     </div>
                                 </td>

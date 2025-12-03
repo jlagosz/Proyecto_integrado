@@ -46,15 +46,15 @@
                 {% if moto.motorista_actual %}
                     {{ moto.motorista_actual }}
                 {% else %}
-                    <a href="{% url 'asignar_moto_motorista' moto.pk %}" class="btn btn-sm btn-outline-success">
+                    <a href="{% url 'asignacion_moto_crear' moto.pk %}" class="btn btn-sm btn-outline-success">
                         <i class="bi bi-plus-circle"></i> Asignar
                     </a>
                 {% endif %}
             </td>
 
             <td>
-                <a href="{% url 'detalle_moto' moto.pk %}" class="btn btn-sm btn-info">Ver</a>
-                <a href="{% url 'moto_modificar' moto.pk %}" class="btn btn-sm btn-warning">Editar</a>
+                <a href="{% url 'moto_detalle' moto.pk %}" class="btn btn-sm btn-info">Ver</a>
+                <a href="{% url 'moto_editar' moto.pk %}" class="btn btn-sm btn-warning">Editar</a>
                 <a href="{% url 'moto_eliminar' moto.pk %}" class="btn btn-sm btn-danger">Eliminar</a>
             </td>
         </tr>

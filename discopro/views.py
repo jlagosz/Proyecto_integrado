@@ -37,7 +37,7 @@ from .models import (
     ContactoEmergencia, TipoMovimiento, Movimiento, Usuario, Rol, Provincia, Comuna
 )
 
-# --- VISTAS DE LOGIN/LOGOUT (NATIVAS) ---
+# --- VISTAS DE LOGIN/LOGOUT ---
 
 def login_view(request):
     """Maneja el inicio de sesión usando Django Auth."""
@@ -199,7 +199,6 @@ class UsuarioListView(LoginRequiredMixin, ListView):
         queryset = super().get_queryset().select_related('rol')
         query = self.request.GET.get('q')
         if query:
-            # Adaptamos filtros a los campos de AbstractUser (username, first_name, last_name)
             queryset = queryset.filter(
                 Q(first_name__icontains=query) |
                 Q(last_name__icontains=query) |
@@ -230,6 +229,22 @@ class UsuarioDeleteView(LoginRequiredMixin, DeleteView):
     def form_valid(self, form):
         messages.success(self.request, "Usuario eliminado exitosamente.")
         return super().form_valid(form)
+
+# --- VISTAS DE USUARIO Y CONFIGURACIÓN ---
+
+class MiCuentaView(LoginRequiredMixin, DetailView):
+    """Vista para ver el perfil del usuario logueado."""
+    model = Usuario
+    template_name = 'discopro/Usuario/mi_cuenta.html'
+    context_object_name = 'usuario'
+
+    def get_object(self):
+        # Retorna el usuario actual de la sesión
+        return self.request.user
+
+class ConfiguracionView(LoginRequiredMixin, TemplateView):
+    """Vista placeholder para configuración."""
+    template_name = 'discopro/Usuario/configuracion.html'
 
 # --- CRUD FARMACIAS ---
 

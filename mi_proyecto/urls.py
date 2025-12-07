@@ -19,6 +19,10 @@ urlpatterns = [
     path('usuarios/crear/', views.UsuarioCreateView.as_view(), name='usuario_crear'),
     path('usuarios/editar/<int:pk>/', views.UsuarioUpdateView.as_view(), name='usuario_editar'),
     path('usuarios/eliminar/<int:pk>/', views.UsuarioDeleteView.as_view(), name='usuario_eliminar'),
+    
+    # --- CONFIG USUARIOS ---
+    path('mi-cuenta/', views.MiCuentaView.as_view(), name='mi_cuenta'),
+    path('configuracion/', views.ConfiguracionView.as_view(), name='configuracion'),
 
     # --- CRUD FARMACIAS ---
     path('farmacias/', views.FarmaciaListView.as_view(), name='farmacia_lista'), 

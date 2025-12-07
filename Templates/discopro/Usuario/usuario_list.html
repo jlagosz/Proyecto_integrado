@@ -11,7 +11,8 @@
 <form method="get" class="mb-4">
     <div class="input-group">
         <input type="text" class="form-control" name="q" placeholder="Buscar por Nombre, RUT o Usuario..." value="{{ request.GET.q }}">
-        <button class="btn btn-outline-secondary" type="submit">Buscar</button>
+        <button type="submit" class="btn btn-primary">Buscar</button>
+        <button type="button" class="btn btn-secondary btn-clear-search"><i class="bi bi-x-lg"></i></button>
     </div>
 </form>
 

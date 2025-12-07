@@ -1,99 +1,167 @@
-.sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    width: 260px;
-    padding: 1rem;
-    background-color: #2c3e50;
-    z-index: 1030;
-    overflow-y: auto;
+/* Wrapper Principal: Flexbox para empujar contenido */
+#wrapper {
+    display: flex;
+    width: 100%;
+    align-items: stretch;
+    transition: all 0.3s ease;
+    overflow-x: hidden;
 }
 
-/* El logo o título principal */
+/* BOTÓN FLOTANTE  */
+.btn-toggle-sidebar {
+    position: fixed; 
+    top: 15px; 
+    left: 15px; 
+    z-index: 1050;     
+    background: transparent;
+    border: none;
+    font-size: 1.8rem;
+    cursor: pointer;
+    transition: color 0.3s ease;
+    padding: 0;
+    line-height: 1;
+}
+
+/* ESTADO 1: Menú Abierto (Default) */
+.btn-toggle-sidebar {
+    color: #fff; 
+}
+
+/* ESTADO 2: Menú Cerrado  */
+#wrapper.toggled .btn-toggle-sidebar {
+    color: #2c3e50;
+}
+
+/* 3. SIDEBAR (Barra Lateral) */
+.sidebar {
+    min-width: 260px;
+    max-width: 260px;
+    min-height: 100vh;
+    background-color: #2c3e50;
+    color: #fff;
+    transition: margin-left 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    z-index: 1040;
+}
+
+/* Header del Sidebar */
 .sidebar-header {
-    padding-bottom: 1rem;
-    margin-bottom: 1rem;
+    background: #1a252f;
+    height: 60px;        
+    display: flex;
+    align-items: center; 
+    padding-left: 60px; 
+}
+
+.sidebar-header a {
+    color: #fff;
+    font-size: 1.4rem;
+    font-weight: bold;
+    text-decoration: none;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+/* SECCIÓN DE USUARIO */
+.user-info-section {
+    background-color: #243342;
+    padding: 20px 15px;
     border-bottom: 1px solid #465a70;
     text-align: center;
 }
 
-.sidebar-header a {
-    color: #ffffff;
-    font-size: 1.5rem;
-    font-weight: bold;
-    text-decoration: none;
+.user-info-section h6 {
+    margin: 0;
+    color: #ecf0f1;
+    font-size: 0.95rem;
+    font-weight: 600;
 }
 
-/* Estilo de los enlaces de navegación */
-.sidebar-nav .nav-link {
-    font-size: 1.1rem;
-    font-weight: 500;
+.user-info-section small {
     color: #bdc3c7;
-    padding: 0.75rem 1rem;
-    border-radius: 0.375rem;
-    margin-bottom: 0.25rem;
+    font-size: 0.8rem;
+    display: block;
+    margin-top: 4px;
+}
+
+/*  NAVEGACIÓN */
+.sidebar-nav {
+    padding: 10px;
+    flex-grow: 1;
+}
+
+.sidebar-nav .nav-link {
+    color: #bdc3c7;
+    padding: 0.8rem 1rem;
+    margin-bottom: 0.2rem;
+    border-radius: 6px;
+    font-weight: 500;
     display: flex;
     align-items: center;
-    border-left: 4px solid transparent;
-    transition: background-color 0.2s, border-left 0.2s;
+    transition: all 0.2s;
 }
 
-/* Íconos dentro de los enlaces */
-.sidebar-nav .nav-link .bi {
-    margin-right: 0.75rem;
-    font-size: 1.2rem;
-    width: 20px;
-}
-
-/* Efecto hover sobre los enlaces */
 .sidebar-nav .nav-link:hover {
     background-color: #34495e;
-    color: #ffffff;
+    color: #fff;
+    padding-left: 1.2rem;
 }
 
-/* Estilo para el enlace activo  */
 .sidebar-nav .nav-link.active {
-    background-color: transparent;
-    color: #ffffff;
-    font-weight: 600;
-    border-left: 4px solid #3498db;
+    background-color: #3498db;
+    color: #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
 
-/* El contenido principal */
+.sidebar-nav .nav-link .bi {
+    margin-right: 12px;
+    font-size: 1.1rem;
+}
+
+/* LOGICA DE OCULTAMIENTO */
+#wrapper.toggled .sidebar {
+    margin-left: -260px;
+}
+
+/* CONTENIDO PRINCIPAL */
 .main-content {
-    margin-left: 260px;
-    padding: 2rem;
+    width: 100%;
+    padding: 20px;
+    padding-top: 30px; 
+    background-color: #f4f6f9;
+    min-height: 100vh;
+    transition: padding-left 0.3s ease;
 }
 
-/* Ajuste para pantallas pequeñas (móviles) */
-@media (max-width: 767.98px) {
+#wrapper.toggled .main-content {
+    padding-left: 70px; 
+}
+
+/* 8. RESPONSIVIDAD (MÓVIL) */
+@media (max-width: 768px) {
+    /* En móvil, por defecto está oculto */
     .sidebar {
-        width: 100%;
-        height: auto;
-        position: relative;
-        padding: 0.5rem 1rem;
+        margin-left: -260px; 
+        position: fixed; 
+        height: 100%;
+        box-shadow: 5px 0 15px rgba(0,0,0,0.3);
     }
     
-    .sidebar-header {
-        padding: 0.5rem 0;
-        margin: 0;
-        border: none;
-        text-align: left;
+    /* En móvil, botón oscuro por defecto */
+    .btn-toggle-sidebar { color: #2c3e50; }
+
+    /* Al activar .toggled, SE MUESTRA */
+    #wrapper.toggled .sidebar {
+        margin-left: 0;
     }
     
-    .sidebar-nav {
-        display: flex;
-        flex-direction: row;
-    }
-    
-    .sidebar-nav .nav-link.active {
-        border-left: 4px solid transparent;
-        background-color: #1abc9c;
+    /* Al abrir menú en móvil, botón se vuelve blanco porque el menú lo tapa */
+    #wrapper.toggled .btn-toggle-sidebar {
+        color: #fff;
     }
 
     .main-content {
-        margin-left: 0;
-        padding: 1rem;
+        padding-left: 70px;
     }
 }

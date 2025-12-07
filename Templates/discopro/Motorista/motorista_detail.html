@@ -107,7 +107,12 @@
         </div>
         
         <div class="card mb-4">
-            <div class="card-header"><strong>Historial de Farmacias</strong></div>
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <strong>Historial de Farmacias</strong>
+                <a href="{% url 'asignacion_farmacia_crear' motorista.pk %}" class="btn btn-sm btn-outline-secondary">
+                 Asignar Farmacia
+                </a>
+            </div>
              <ul class="list-group list-group-flush" style="max-height: 200px; overflow-y: auto;">
                 {% for asignacion in asignaciones_farmacia %}
                     <li class="list-group-item">
@@ -121,7 +126,10 @@
         </div>
 
         <div class="card mb-4">
-            <div class="card-header"><strong>Historial de Motos</strong></div>
+            <div class="card-header">
+                <strong>Historial de Motos</strong>
+                (Para Asignar una Moto se Hace desde Motos o Motos detalle)
+            </div>
              <ul class="list-group list-group-flush" style="max-height: 200px; overflow-y: auto;">
                 {% for asignacion in asignaciones_moto %}
                     <li class="list-group-item">

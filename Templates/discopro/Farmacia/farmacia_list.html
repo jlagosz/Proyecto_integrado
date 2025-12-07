@@ -39,7 +39,6 @@
             <td>{{ farmacia.telefono }}</td>
             <td>{{ farmacia.horario_apertura|time:"H:i" }} - {{ farmacia.horario_cierre|time:"H:i" }}</td>
             <td>
-                <a href="{% url 'farmacia_detalle' farmacia.pk %}" class="btn btn-sm btn-info">Ver</a>
                 <a href="{% url 'farmacia_editar' farmacia.pk %}" class="btn btn-sm btn-warning">Editar</a>
                 <a href="{% url 'farmacia_eliminar' farmacia.pk %}" class="btn btn-sm btn-danger">Eliminar</a>
             </td>

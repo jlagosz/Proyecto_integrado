@@ -382,3 +382,42 @@ a:hover {
 .input-group {
     flex-wrap: nowrap;
 }
+
+/* =========================================
+   11. SORTING TABLES (Tablas Ordenables)
+   ========================================= */
+
+th.sortable {
+    cursor: pointer;
+    position: relative;
+    padding-right: 25px !important; /* Espacio para la flecha */
+    transition: background-color 0.2s;
+}
+
+th.sortable:hover {
+    background-color: #34495e !important; /* Un poco más claro que el dark base */
+}
+
+th.sortable a {
+    color: #fff;
+    text-decoration: none;
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+th.sortable i {
+    font-size: 0.9em;
+    margin-left: 5px;
+    opacity: 0.7;
+}
+
+/* Paginación personalizada */
+.pagination .page-item.active .page-link {
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
+}
+
+.pagination .page-link {
+    color: var(--primary-color);
+}

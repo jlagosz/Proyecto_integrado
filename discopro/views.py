@@ -1,34 +1,29 @@
 from django import forms
-from django.db.models import Count
+from django.db.models import Count, Q, Subquery, OuterRef
 from django.db.models.functions import TruncMonth
 from django.views import View
 from django.views.generic import TemplateView, ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy
-from django.db.models import Q, Subquery, OuterRef
-from django.http import HttpRequest
+from django.http import HttpRequest, JsonResponse
 from django.utils import timezone
 from collections import defaultdict
 from datetime import timedelta
-from django.http import JsonResponse
-
-# --- AUTENTICACIÓN NATIVA DE DJANGO ---
-from django.contrib.auth import login, logout, authenticate
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.auth.decorators import login_required
 
 # --- MENSAJES ---
 from django.contrib import messages
 from django.contrib.messages.views import SuccessMessageMixin
 
+# --- AUTENTICACIÓN (Funciones básicas) ---
+from django.contrib.auth import login, logout
+from .forms import CustomLoginForm
+
 from discopro.utils import render_to_pdf 
 
-
 from .forms import (
-    CustomLoginForm, UsuarioForm,
-    FarmaciaForm, MotoristaForm, MotoForm, 
+    UsuarioForm, FarmaciaForm, MotoristaForm, MotoForm, 
     AsignacionFarmaciaForm, AsignacionMotoForm, DocumentacionMotoForm, MantenimientoForm,
-    ContactoEmergenciaForm, TipoMovimientoForm, MovimientoForm
+    ContactoEmergenciaForm, MovimientoForm
 )
 
 # Importamos Modelos
@@ -40,7 +35,7 @@ from .models import (
 # --- VISTAS DE LOGIN/LOGOUT ---
 
 def login_view(request):
-    """Maneja el inicio de sesión usando Django Auth."""
+    """Maneja el inicio de sesión."""
     if request.user.is_authenticated:
         return redirect('index')
 
@@ -59,17 +54,15 @@ def login_view(request):
     return render(request, 'discopro/login.html', {'form': form})
 
 def logout_view(request):
-    """Cierra la sesión nativa."""
+    """Cierra la sesión."""
     logout(request)
     messages.success(request, 'Has cerrado sesión exitosamente.')
     return redirect('login')
 
 # --- VISTA PRINCIPAL (DASHBOARD) ---
 
-@login_required
 def index(request: HttpRequest):
-    """Dashboard principal protegido por @login_required."""
-    
+    """Dashboard principal."""
     total_farmacias = Farmacia.objects.count()
     total_motoristas = Motorista.objects.count()
     total_motos = Moto.objects.count()
@@ -88,7 +81,7 @@ def index(request: HttpRequest):
 
 # --- REPORTES ---
 
-class ReporteMovimientosView(LoginRequiredMixin, TemplateView):
+class ReporteMovimientosView(TemplateView):
     template_name = 'discopro/Movimiento/reporte_general.html'
 
     def get_context_data(self, **kwargs):
@@ -131,7 +124,7 @@ class ReporteMovimientosView(LoginRequiredMixin, TemplateView):
 
         return context
 
-class ExportarReportePDFView(LoginRequiredMixin, View):
+class ExportarReportePDFView(View):
     def get(self, request, *args, **kwargs):
         tipo = request.GET.get('tipo', 'diario')
         
@@ -190,38 +183,63 @@ class ExportarReportePDFView(LoginRequiredMixin, View):
 
 # --- CRUD USUARIOS  ---
 
-class UsuarioListView(LoginRequiredMixin, ListView):
+class UsuarioListView(ListView):
     model = Usuario
     template_name = 'discopro/Usuario/usuario_list.html'
     context_object_name = 'usuarios'
+    paginate_by = 20
 
     def get_queryset(self):
+        # Optimización: traemos el rol en la misma consulta
         queryset = super().get_queryset().select_related('rol')
+        
+        # 1. Búsqueda (Incluyendo Rol)
         query = self.request.GET.get('q')
         if query:
             queryset = queryset.filter(
                 Q(first_name__icontains=query) |
                 Q(last_name__icontains=query) |
                 Q(rut__icontains=query) |
-                Q(username__icontains=query)
+                Q(username__icontains=query) |
+                Q(email__icontains=query) |
+                Q(rol__nombreRol__icontains=query)  # <-- Nuevo: Buscar por nombre del Rol
             ).distinct()
-        return queryset.order_by('first_name')
+        
+        # 2. Ordenamiento con Mapeo
+        sort_by = self.request.GET.get('sort', 'first_name')
+        if sort_by:
+            direction = '-' if sort_by.startswith('-') else ''
+            field_name = sort_by.lstrip('-')
+            
+            mapping = {
+                'username': 'username',
+                'nombres': 'first_name', # Mapeamos 'nombres' a first_name
+                'rut': 'rut',
+                'email': 'email',
+                'estado': 'is_active',
+                'rol': 'rol__nombreRol' # <-- CLAVE: Ordenar por nombre del rol, no por ID
+            }
+            
+            if field_name in mapping:
+                queryset = queryset.order_by(f"{direction}{mapping[field_name]}")
+                
+        return queryset
 
-class UsuarioCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+class UsuarioCreateView(SuccessMessageMixin, CreateView):
     model = Usuario
     form_class = UsuarioForm
     template_name = 'discopro/Usuario/usuario_form.html'
     success_url = reverse_lazy('usuario_lista')
     success_message = "Usuario creado exitosamente."
 
-class UsuarioUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+class UsuarioUpdateView(SuccessMessageMixin, UpdateView):
     model = Usuario
     form_class = UsuarioForm
     template_name = 'discopro/Usuario/usuario_form.html'
     success_url = reverse_lazy('usuario_lista')
     success_message = "Usuario actualizado exitosamente."
 
-class UsuarioDeleteView(LoginRequiredMixin, DeleteView):
+class UsuarioDeleteView(DeleteView):
     model = Usuario
     template_name = 'discopro/confirmar_eliminar.html'
     success_url = reverse_lazy('usuario_lista')
@@ -232,53 +250,74 @@ class UsuarioDeleteView(LoginRequiredMixin, DeleteView):
 
 # --- VISTAS DE USUARIO Y CONFIGURACIÓN ---
 
-class MiCuentaView(LoginRequiredMixin, DetailView):
+class MiCuentaView(DetailView):
     """Vista para ver el perfil del usuario logueado."""
     model = Usuario
     template_name = 'discopro/Usuario/mi_cuenta.html'
     context_object_name = 'usuario'
 
     def get_object(self):
-        # Retorna el usuario actual de la sesión
         return self.request.user
 
-class ConfiguracionView(LoginRequiredMixin, TemplateView):
+class ConfiguracionView(TemplateView):
     """Vista placeholder para configuración."""
     template_name = 'discopro/Usuario/configuracion.html'
 
 # --- CRUD FARMACIAS ---
 
-class FarmaciaListView(LoginRequiredMixin, ListView):
+class FarmaciaListView(ListView):
     model = Farmacia
     template_name = 'discopro/Farmacia/farmacia_list.html'
     context_object_name = 'farmacias'
+    paginate_by = 20
 
     def get_queryset(self):
         queryset = super().get_queryset().select_related('comuna__provincia__region')
+        
+        # 1. Búsqueda
         query = self.request.GET.get('q')
         if query:
             queryset = queryset.filter(
-                Q(nombre__icontains=query) | 
-                Q(direccion__icontains=query) |
-                Q(comuna__nombreComuna__icontains=query)
+                Q(nombre__icontains=query) | Q(direccion__icontains=query) |
+                Q(comuna__nombreComuna__icontains=query) | Q(telefono__icontains=query)
             ).distinct()
+        
+        # 2. Ordenamiento con Mapeo
+        sort_by = self.request.GET.get('sort', 'nombre')
+        if sort_by:
+            direction = '-' if sort_by.startswith('-') else ''
+            field_name = sort_by.lstrip('-')
+            
+            mapping = {
+                'nombre': 'nombre',
+                'direccion': 'direccion',
+                'telefono': 'telefono',
+                'horario_apertura': 'horario_apertura',
+                'comuna': 'comuna__nombreComuna', # <-- TRADUCCIÓN FK
+                'provincia': 'comuna__provincia__nombreProvincia',
+                'region': 'comuna__provincia__region__nombreRegion'
+            }
+
+            if field_name in mapping:
+                queryset = queryset.order_by(f"{direction}{mapping[field_name]}")
+
         return queryset
 
-class FarmaciaCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+class FarmaciaCreateView(SuccessMessageMixin, CreateView):
     model = Farmacia
     form_class = FarmaciaForm
     template_name = 'discopro/Farmacia/farmacia_form.html'
     success_url = reverse_lazy('farmacia_lista')
     success_message = "Farmacia creada exitosamente."
 
-class FarmaciaUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+class FarmaciaUpdateView(SuccessMessageMixin, UpdateView):
     model = Farmacia
     form_class = FarmaciaForm
     template_name = 'discopro/Farmacia/farmacia_form.html'
     success_url = reverse_lazy('farmacia_lista')
     success_message = "Farmacia actualizada exitosamente."
 
-class FarmaciaDeleteView(LoginRequiredMixin, DeleteView):
+class FarmaciaDeleteView(DeleteView):
     model = Farmacia
     template_name = 'discopro/confirmar_eliminar.html'
     success_url = reverse_lazy('farmacia_lista')
@@ -287,7 +326,7 @@ class FarmaciaDeleteView(LoginRequiredMixin, DeleteView):
         messages.success(self.request, "Farmacia eliminada exitosamente.")
         return super().form_valid(form)
     
-class FarmaciaDetailView(LoginRequiredMixin, DetailView):
+class FarmaciaDetailView(DetailView):
     model = Farmacia
     template_name = 'discopro/Farmacia/farmacia_detail.html'
     context_object_name = 'farmacia'
@@ -298,30 +337,55 @@ class FarmaciaDetailView(LoginRequiredMixin, DetailView):
 
 # --- CRUD MOTORISTAS ---
 
-class MotoristaListView(LoginRequiredMixin, ListView):
+class MotoristaListView(ListView):
     model = Motorista
     template_name = 'discopro/Motorista/motorista_list.html'
     context_object_name = 'motoristas'
+    paginate_by = 20
 
     def get_queryset(self):
         queryset = super().get_queryset().select_related('comuna')
-        query = self.request.GET.get('q')
-
+        
+        # Anotación para "Farmacia Actual" (Última asignación)
         latest_farmacia = AsignacionFarmacia.objects.filter(
             motorista=OuterRef('pk')
         ).order_by('-fechaAsignacion', '-idAsignacionFarmacia').values('farmacia__nombre')[:1]
         
         queryset = queryset.annotate(farmacia_actual=Subquery(latest_farmacia))
 
+        # 1. Búsqueda (Agregamos búsqueda por nombre de Farmacia)
+        query = self.request.GET.get('q')
         if query:
             queryset = queryset.filter(
                 Q(nombres__icontains=query) | 
-                Q(rut__icontains=query) |
-                Q(comuna__nombreComuna__icontains=query)
+                Q(apellido_paterno__icontains=query) | 
+                Q(rut__icontains=query) | 
+                Q(telefono__icontains=query) |
+                Q(comuna__nombreComuna__icontains=query) |
+                Q(asignacionfarmacia__farmacia__nombre__icontains=query) # <-- Búsqueda en historial
             ).distinct()
+            
+        # 2. Ordenamiento
+        sort_by = self.request.GET.get('sort', 'nombres')
+        if sort_by:
+            direction = '-' if sort_by.startswith('-') else ''
+            field_name = sort_by.lstrip('-')
+            
+            mapping = {
+                'nombres': 'nombres',
+                'rut': 'rut',
+                'telefono': 'telefono',
+                'estado': 'estado',
+                'comuna': 'comuna__nombreComuna',
+                'farmacia': 'farmacia_actual' # <-- Ordenar por la anotación
+            }
+
+            if field_name in mapping:
+                queryset = queryset.order_by(f"{direction}{mapping[field_name]}")
+
         return queryset
 
-class MotoristaDetailView(LoginRequiredMixin, DetailView):
+class MotoristaDetailView(DetailView):
     model = Motorista
     template_name = 'discopro/Motorista/motorista_detail.html'
     context_object_name = 'motorista'
@@ -334,21 +398,21 @@ class MotoristaDetailView(LoginRequiredMixin, DetailView):
         context['contactos'] = motorista.contactos_emergencia.all()
         return context
 
-class MotoristaCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+class MotoristaCreateView(SuccessMessageMixin, CreateView):
     model = Motorista
     form_class = MotoristaForm
     template_name = 'discopro/Motorista/motorista_form.html'
     success_url = reverse_lazy('motorista_lista')
     success_message = "Motorista registrado exitosamente."
 
-class MotoristaUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+class MotoristaUpdateView(SuccessMessageMixin, UpdateView):
     model = Motorista
     form_class = MotoristaForm
     template_name = 'discopro/Motorista/motorista_form.html'
     success_url = reverse_lazy('motorista_lista')
     success_message = "Datos del motorista actualizados correctamente."
 
-class MotoristaDeleteView(LoginRequiredMixin, DeleteView):
+class MotoristaDeleteView(DeleteView):
     model = Motorista
     template_name = 'discopro/confirmar_eliminar.html'
     success_url = reverse_lazy('motorista_lista')
@@ -359,25 +423,53 @@ class MotoristaDeleteView(LoginRequiredMixin, DeleteView):
 
 # --- CRUD MOTOS ---
 
-class MotoListView(LoginRequiredMixin, ListView):
+class MotoListView(ListView):
     model = Moto
     template_name = 'discopro/Moto/moto_list.html'
     context_object_name = 'motos'
+    paginate_by = 20
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        query = self.request.GET.get('q')
         
+        # Anotación para "Motorista Actual"
         latest_motorista = AsignacionMoto.objects.filter(
             moto=OuterRef('pk')
         ).order_by('-fechaAsignacion', '-idAsignacionMoto').values('motorista__nombres')[:1]
         
         queryset = queryset.annotate(motorista_actual=Subquery(latest_motorista))
+        
+        # 1. Búsqueda (Agregamos búsqueda por nombre de Motorista)
+        query = self.request.GET.get('q')
         if query:
-            queryset = queryset.filter(Q(patente__icontains=query) | Q(marca__icontains=query)).distinct()
+            queryset = queryset.filter(
+                Q(patente__icontains=query) | 
+                Q(marca__icontains=query) |
+                Q(modelo__icontains=query) |
+                Q(anio__icontains=query) |
+                Q(asignacionmoto__motorista__nombres__icontains=query) # <-- Búsqueda
+            ).distinct()
+            
+        # 2. Ordenamiento
+        sort_by = self.request.GET.get('sort', 'patente')
+        if sort_by:
+            direction = '-' if sort_by.startswith('-') else ''
+            field_name = sort_by.lstrip('-')
+            
+            mapping = {
+                'patente': 'patente',
+                'marca': 'marca',
+                'modelo': 'modelo',
+                'anio': 'anio',
+                'propietario': 'propietario',
+                'motorista': 'motorista_actual' # <-- Ordenar por anotación
+            }
+            if field_name in mapping:
+                queryset = queryset.order_by(f"{direction}{mapping[field_name]}")
+
         return queryset
 
-class MotoDetailView(LoginRequiredMixin, DetailView):
+class MotoDetailView(DetailView):
     model = Moto
     template_name = 'discopro/Moto/moto_detail.html'
     context_object_name = 'moto'
@@ -388,21 +480,21 @@ class MotoDetailView(LoginRequiredMixin, DetailView):
         context['asignaciones_moto'] = AsignacionMoto.objects.filter(moto=moto).select_related('motorista').order_by('-fechaAsignacion')
         return context
 
-class MotoCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+class MotoCreateView(SuccessMessageMixin, CreateView):
     model = Moto
     form_class = MotoForm
     template_name = 'discopro/Moto/moto_form.html'
     success_url = reverse_lazy('moto_lista')
     success_message = "Moto registrada exitosamente."
 
-class MotoUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+class MotoUpdateView(SuccessMessageMixin, UpdateView):
     model = Moto
     form_class = MotoForm
     template_name = 'discopro/Moto/moto_form.html'
     success_url = reverse_lazy('moto_lista')
     success_message = "Datos de la moto actualizados."
 
-class MotoDeleteView(LoginRequiredMixin, DeleteView):
+class MotoDeleteView(DeleteView):
     model = Moto
     template_name = 'discopro/confirmar_eliminar.html'
     success_url = reverse_lazy('moto_lista')
@@ -413,7 +505,7 @@ class MotoDeleteView(LoginRequiredMixin, DeleteView):
 
 # --- ASIGNACIONES Y DOCUMENTOS ---
 
-class AsignacionFarmaciaCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+class AsignacionFarmaciaCreateView(SuccessMessageMixin, CreateView):
     model = AsignacionFarmacia
     form_class = AsignacionFarmaciaForm
     template_name = 'discopro/Asignaciones/asignacion_farmacia_form.html'
@@ -431,7 +523,7 @@ class AsignacionFarmaciaCreateView(LoginRequiredMixin, SuccessMessageMixin, Crea
     def get_success_url(self):
         return reverse_lazy('motorista_detalle', kwargs={'pk': self.kwargs['motorista_pk']})
 
-class AsignacionMotoCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+class AsignacionMotoCreateView(SuccessMessageMixin, CreateView):
     model = AsignacionMoto
     form_class = AsignacionMotoForm
     template_name = 'discopro/Asignaciones/asignacion_moto_form.html'
@@ -449,7 +541,7 @@ class AsignacionMotoCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateVi
     def get_success_url(self):
         return reverse_lazy('moto_detalle', kwargs={'pk': self.kwargs['moto_pk']})
     
-class DocumentacionMotoUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+class DocumentacionMotoUpdateView(SuccessMessageMixin, UpdateView):
     model = DocumentacionMoto
     form_class = DocumentacionMotoForm
     template_name = 'discopro/Moto/documentacion_moto_form.html'
@@ -470,7 +562,7 @@ class DocumentacionMotoUpdateView(LoginRequiredMixin, SuccessMessageMixin, Updat
     def get_success_url(self):
         return reverse_lazy('moto_detalle', kwargs={'pk': self.object.moto_id})
 
-class MantenimientoCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+class MantenimientoCreateView(SuccessMessageMixin, CreateView):
     model = Mantenimiento
     form_class = MantenimientoForm
     template_name = 'discopro/Moto/mantenimiento_form.html'
@@ -488,7 +580,7 @@ class MantenimientoCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateVie
     def get_success_url(self):
         return reverse_lazy('moto_detalle', kwargs={'pk': self.object.moto.pk})
 
-class ContactoEmergenciaCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+class ContactoEmergenciaCreateView(SuccessMessageMixin, CreateView):
     model = ContactoEmergencia
     form_class = ContactoEmergenciaForm
     template_name = 'discopro/Motorista/contacto_emergencia_form.html'
@@ -506,7 +598,7 @@ class ContactoEmergenciaCreateView(LoginRequiredMixin, SuccessMessageMixin, Crea
     def get_success_url(self):
         return reverse_lazy('motorista_detalle', kwargs={'pk': self.kwargs['motorista_pk']})
 
-class ContactoEmergenciaDeleteView(LoginRequiredMixin, DeleteView):
+class ContactoEmergenciaDeleteView(DeleteView):
     model = ContactoEmergencia
     template_name = 'discopro/confirmar_eliminar.html'
     
@@ -519,13 +611,16 @@ class ContactoEmergenciaDeleteView(LoginRequiredMixin, DeleteView):
 
 # --- CRUD MOVIMIENTOS ---
 
-class MovimientoListView(LoginRequiredMixin, ListView):
+class MovimientoListView(ListView):
     model = Movimiento
     template_name = 'discopro/Movimiento/movimiento_list.html'
     context_object_name = 'movimientos'
+    paginate_by = 20
     
     def get_queryset(self):
-        queryset = super().get_queryset().filter(movimiento_padre__isnull=True).order_by('-fecha_movimiento')
+        queryset = super().get_queryset().filter(movimiento_padre__isnull=True).select_related('tipo_movimiento', 'motorista_asignado')
+        
+        # 1. Búsqueda
         query = self.request.GET.get('q')
         if query:
             queryset = queryset.filter(
@@ -533,11 +628,32 @@ class MovimientoListView(LoginRequiredMixin, ListView):
                 Q(id_movimiento__icontains=query) |
                 Q(origen__icontains=query) |
                 Q(destino__icontains=query) |
-                Q(usuario_responsable__first_name__icontains=query) # Filtro por first_name del User
+                Q(motorista_asignado__nombres__icontains=query) | # <-- Búsqueda Motorista
+                Q(usuario_responsable__first_name__icontains=query)
             ).distinct()
+        
+        # 2. Ordenamiento
+        sort_by = self.request.GET.get('sort', '-fecha_movimiento')
+        if sort_by:
+            direction = '-' if sort_by.startswith('-') else ''
+            field_name = sort_by.lstrip('-')
+            
+            mapping = {
+                'numero_despacho': 'numero_despacho',
+                'fecha_movimiento': 'fecha_movimiento',
+                'estado': 'estado',
+                'tipo_movimiento': 'tipo_movimiento__nombre',
+                'origen': 'origen',    # <-- Agregado
+                'destino': 'destino',  # <-- Agregado
+                'motorista': 'motorista_asignado__nombres' # <-- Agregado FK
+            }
+            
+            if field_name in mapping:
+                queryset = queryset.order_by(f"{direction}{mapping[field_name]}")
+        
         return queryset
 
-class MovimientoDetailView(LoginRequiredMixin, DetailView):
+class MovimientoDetailView(DetailView):
     model = Movimiento
     template_name = 'discopro/Movimiento/movimiento_detail.html'
     context_object_name = 'movimiento'
@@ -547,7 +663,7 @@ class MovimientoDetailView(LoginRequiredMixin, DetailView):
         context['tramos_hijos'] = Movimiento.objects.filter(movimiento_padre=self.object).order_by('fecha_movimiento')
         return context
 
-class MovimientoCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+class MovimientoCreateView(SuccessMessageMixin, CreateView):
     model = Movimiento
     form_class = MovimientoForm
     template_name = 'discopro/Movimiento/movimiento_padre_form.html'
@@ -562,11 +678,17 @@ class MovimientoCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
         initial = super().get_initial()
         initial['movimiento_padre'] = None
         return initial
+    
+    def form_valid(self, form):
+        # Asignamos el usuario logueado si existe, sino None (cuidado si no hay auth)
+        if self.request.user.is_authenticated:
+            form.instance.usuario_responsable = self.request.user
+        return super().form_valid(form)
 
     def get_success_url(self):
         return self.object.get_absolute_url()
 
-class MovimientoUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+class MovimientoUpdateView(SuccessMessageMixin, UpdateView):
     model = Movimiento
     form_class = MovimientoForm
     template_name = 'discopro/Movimiento/movimiento_padre_form.html'
@@ -580,7 +702,7 @@ class MovimientoUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
     def get_success_url(self):
         return self.object.get_absolute_url()
 
-class MovimientoDeleteView(LoginRequiredMixin, DeleteView):
+class MovimientoDeleteView(DeleteView):
     model = Movimiento
     template_name = 'discopro/confirmar_eliminar.html'
     success_url = reverse_lazy('movimiento_lista')
@@ -589,7 +711,7 @@ class MovimientoDeleteView(LoginRequiredMixin, DeleteView):
         messages.success(self.request, "Movimiento eliminado exitosamente.")
         return super().form_valid(form)
 
-class TramoCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+class TramoCreateView(SuccessMessageMixin, CreateView):
     model = Movimiento
     form_class = MovimientoForm
     template_name = 'discopro/Movimiento/tramo_form.html'
@@ -638,8 +760,13 @@ class TramoCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
             return redirect('movimiento_detalle', pk=padre.pk)
             
         return super().dispatch(request, *args, **kwargs)
+    
+    def form_valid(self, form):
+        if self.request.user.is_authenticated:
+            form.instance.usuario_responsable = self.request.user
+        return super().form_valid(form)
 
-class TramoUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+class TramoUpdateView(SuccessMessageMixin, UpdateView):
     model = Movimiento
     form_class = MovimientoForm
     template_name = 'discopro/Movimiento/tramo_form.html'
@@ -653,7 +780,7 @@ class TramoUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
     def get_success_url(self):
         return reverse_lazy('movimiento_detalle', kwargs={'pk': self.object.movimiento_padre.pk})
 
-class TramoDeleteView(LoginRequiredMixin, DeleteView):
+class TramoDeleteView(DeleteView):
     model = Movimiento
     template_name = 'discopro/confirmar_eliminar.html'
     

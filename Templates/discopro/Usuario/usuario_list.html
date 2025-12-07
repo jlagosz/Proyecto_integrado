@@ -1,5 +1,7 @@
 {% extends 'discopro/base.html' %}
 {% load static %}
+{% load discopro_extras %}
+
 {% block title %}Listado de Usuarios{% endblock %}
 
 {% block content %}
@@ -10,9 +12,8 @@
 
 <form method="get" class="mb-4">
     <div class="input-group">
-        <input type="text" class="form-control" name="q" placeholder="Buscar por Nombre, RUT o Usuario..." value="{{ request.GET.q }}">
-        <button type="submit" class="btn btn-primary">Buscar</button>
-        <button type="button" class="btn btn-secondary btn-clear-search"><i class="bi bi-x-lg"></i></button>
+        <input type="text" class="form-control" name="q" placeholder="Buscar por Nombre, RUT, Rol..." value="{{ request.GET.q }}">
+        <button class="btn btn-outline-secondary" type="submit">Buscar</button>
     </div>
 </form>
 
@@ -20,12 +21,36 @@
     <table class="table table-striped table-hover">
         <thead class="table-dark">
             <tr>
-                <th>Nombre Completo</th>
-                <th>Usuario (Login)</th>
-                <th>RUT</th>
-                <th>Correo</th>
-                <th>Rol</th>
-                <th>Estado</th>
+                <th class="sortable">
+                    <a href="?{% url_replace sort=None %}&sort={% next_sort 'nombres' %}">
+                       Nombre Completo <i class="bi {% sort_icon 'nombres' %}"></i>
+                    </a>
+                </th>
+                <th class="sortable">
+                    <a href="?{% url_replace sort=None %}&sort={% next_sort 'username' %}">
+                       Usuario <i class="bi {% sort_icon 'username' %}"></i>
+                    </a>
+                </th>
+                <th class="sortable">
+                    <a href="?{% url_replace sort=None %}&sort={% next_sort 'rut' %}">
+                       RUT <i class="bi {% sort_icon 'rut' %}"></i>
+                    </a>
+                </th>
+                <th class="sortable">
+                     <a href="?{% url_replace sort=None %}&sort={% next_sort 'email' %}">
+                       Correo <i class="bi {% sort_icon 'email' %}"></i>
+                    </a>
+                </th>
+                <th class="sortable">
+                    <a href="?{% url_replace sort=None %}&sort={% next_sort 'rol' %}">
+                       Rol <i class="bi {% sort_icon 'rol' %}"></i>
+                    </a>
+                </th>
+                <th class="sortable">
+                    <a href="?{% url_replace sort=None %}&sort={% next_sort 'estado' %}">
+                       Estado <i class="bi {% sort_icon 'estado' %}"></i>
+                    </a>
+                </th>
                 <th>Acciones</th>
             </tr>
         </thead>
@@ -60,11 +85,8 @@
                 </td>
                 <td>
                     <a href="{% url 'usuario_editar' usuario.pk %}" class="btn btn-sm btn-warning">Editar</a>
-                    
                     {% if usuario.pk != request.user.pk %}
                         <a href="{% url 'usuario_eliminar' usuario.pk %}" class="btn btn-sm btn-danger">Eliminar</a>
-                    {% else %}
-                        <button class="btn btn-sm btn-secondary" disabled>Actual</button>
                     {% endif %}
                 </td>
             </tr>
@@ -76,4 +98,36 @@
         </tbody>
     </table>
 </div>
+
+{% if is_paginated %}
+<nav class="mt-4">
+  <ul class="pagination justify-content-center">
+    {% if page_obj.has_previous %}
+      <li class="page-item">
+          <a class="page-link" href="?{% url_replace page=page_obj.previous_page_number %}">Anterior</a>
+      </li>
+    {% else %}
+      <li class="page-item disabled"><span class="page-link">Anterior</span></li>
+    {% endif %}
+    
+    {% for i in paginator.page_range %}
+      {% if page_obj.number == i %}
+        <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+      {% elif i > page_obj.number|add:'-3' and i < page_obj.number|add:'3' %}
+        <li class="page-item">
+            <a class="page-link" href="?{% url_replace page=i %}">{{ i }}</a>
+        </li>
+      {% endif %}
+    {% endfor %}
+    
+    {% if page_obj.has_next %}
+      <li class="page-item">
+          <a class="page-link" href="?{% url_replace page=page_obj.next_page_number %}">Siguiente</a>
+      </li>
+    {% else %}
+      <li class="page-item disabled"><span class="page-link">Siguiente</span></li>
+    {% endif %}
+  </ul>
+</nav>
+{% endif %}
 {% endblock %}

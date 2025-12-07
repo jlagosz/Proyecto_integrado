@@ -20,64 +20,79 @@
         </button>
 
         <div class="sidebar">
-            <div class="sidebar-header">
-                <a href="{% url 'index' %}">DiscoPro</a>
+            
+            <div class="sidebar-top-fixed">
+                <div class="sidebar-header">
+                    <a href="{% url 'index' %}">DiscoPro</a>
+                </div>
+
+                {% if user.is_authenticated %}
+                <div class="user-info-section">
+                    <h6>{{ user.first_name }} {{ user.last_name }}</h6>
+                    <small>{{ user.email }}</small>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="sidebar-content-scroll">
+                <ul class="nav nav-pills flex-column sidebar-nav">
+                    
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'mi-cuenta' in request.path %}active{% endif %}" href="{% url 'mi_cuenta' %}">
+                            <i class="bi bi-person-circle"></i> Mi Cuenta
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="{% url 'index' %}">
+                            <i class="bi bi-grid-fill"></i> Dashboard
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'usuarios' in request.path %}active{% endif %}" href="{% url 'usuario_lista' %}">
+                            <i class="bi bi-people-fill"></i> Usuarios
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'farmacias' in request.path %}active{% endif %}" href="{% url 'farmacia_lista' %}">
+                            <i class="bi bi-hospital"></i> Farmacias
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'motoristas' in request.path %}active{% endif %}" href="{% url 'motorista_lista' %}">
+                            <i class="bi bi-person-badge"></i> Motoristas
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'motos' in request.path %}active{% endif %}" href="{% url 'moto_lista' %}">
+                            <i class="bi bi-speedometer2"></i> Motos
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'movimientos' in request.path %}active{% endif %}" href="{% url 'movimiento_lista' %}">
+                            <i class="bi bi-arrows-move"></i> Movimientos
+                        </a>
+                    </li>
+                    
+                    <li style="height: 20px;"></li>
+                </ul>
             </div>
 
-            {% if user.is_authenticated %}
-            <div class="user-info-section">
-                <h6>{{ user.first_name }} {{ user.last_name }}</h6>
-                <small>{{ user.email }}</small>
+            <div class="sidebar-footer">
+                <ul class="nav nav-pills flex-column sidebar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'configuracion' in request.path %}active{% endif %}" href="{% url 'configuracion' %}">
+                            <i class="bi bi-gear-fill"></i> Configuración
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-danger" href="{% url 'logout' %}">
+                            <i class="bi bi-box-arrow-left"></i> Cerrar Sesión
+                        </a>
+                    </li>
+                </ul>
             </div>
-            {% endif %}
-            
-            <ul class="nav nav-pills flex-column sidebar-nav">
-                <li class="nav-item">
-                    <a class="nav-link {% if 'mi-cuenta' in request.path %}active{% endif %}" href="{% url 'mi_cuenta' %}">
-                        <i class="bi bi-person-circle"></i> Mi Cuenta
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="{% url 'index' %}">
-                        <i class="bi bi-grid-fill"></i> Dashboard
-                    </a>
-                </li>
-                 <li class="nav-item">
-                    <a class="nav-link {% if 'usuarios' in request.path %}active{% endif %}" href="{% url 'usuario_lista' %}">
-                        <i class="bi bi-people-fill"></i> Usuarios
-                    </a>
-                </li>
-                 <li class="nav-item">
-                    <a class="nav-link {% if 'farmacias' in request.path %}active{% endif %}" href="{% url 'farmacia_lista' %}">
-                        <i class="bi bi-hospital"></i> Farmacias
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if 'motoristas' in request.path %}active{% endif %}" href="{% url 'motorista_lista' %}">
-                        <i class="bi bi-person-badge"></i> Motoristas
-                    </a>
-                </li>
-                 <li class="nav-item">
-                    <a class="nav-link {% if 'motos' in request.path %}active{% endif %}" href="{% url 'moto_lista' %}">
-                        <i class="bi bi-speedometer2"></i> Motos
-                    </a>
-                </li>
-                 <li class="nav-item">
-                    <a class="nav-link {% if 'movimientos' in request.path %}active{% endif %}" href="{% url 'movimiento_lista' %}">
-                        <i class="bi bi-arrows-move"></i> Movimientos
-                    </a>
-                </li>
-                
-                <li class="nav-item mt-auto border-top pt-2" style="border-color: #465a70 !important;">
-                    <a class="nav-link {% if 'configuracion' in request.path %}active{% endif %}" href="{% url 'configuracion' %}">
-                        <i class="bi bi-gear-fill"></i> Configuración
-                    </a>
-                    
-                    <a class="nav-link text-danger" href="{% url 'logout' %}">
-                        <i class="bi bi-box-arrow-left"></i> Cerrar Sesión
-                    </a>
-                </li>
-            </ul>
         </div>
 
         <div class="main-content">

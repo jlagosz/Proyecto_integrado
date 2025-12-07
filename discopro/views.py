@@ -1,6 +1,6 @@
 from django import forms
 from django.db.models import Count, Q, Subquery, OuterRef
-from django.db.models.functions import TruncMonth
+from django.db.models.functions import TruncMonth, Length
 from django.views import View
 from django.views.generic import TemplateView, ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.shortcuts import render, get_object_or_404, redirect
@@ -184,15 +184,14 @@ class ExportarReportePDFView(View):
             data['columnas'] = ['Mes', 'Cantidad (Completados)']
             data['es_anual'] = True
 
-        # 2. Separar los movimientos por estado para el listado detallado
-        # Usamos select_related para que sea eficiente en el PDF (trae nombres de FKs)
+        # Separar los movimientos por estado para el listado detallado
         movimientos_full = movimientos.select_related('tipo_movimiento', 'motorista_asignado', 'usuario_responsable')
 
         context = {
             'titulo': titulo,
             'fecha_impresion': hoy_local,
             'usuario': request.user,
-            'data': data, # Datos del resumen estadístico
+            'data': data,
             'total_general': movimientos.count(),
             # Listas separadas:
             'movimientos_completados': movimientos_full.filter(estado='completado'),
@@ -211,38 +210,34 @@ class UsuarioListView(ListView):
     paginate_by = 20
 
     def get_queryset(self):
-        # Optimización: traemos el rol en la misma consulta
         queryset = super().get_queryset().select_related('rol')
-        
-        # 1. Búsqueda (Incluyendo Rol)
         query = self.request.GET.get('q')
         if query:
             queryset = queryset.filter(
-                Q(first_name__icontains=query) |
-                Q(last_name__icontains=query) |
-                Q(rut__icontains=query) |
-                Q(username__icontains=query) |
-                Q(email__icontains=query) |
-                Q(rol__nombreRol__icontains=query)  # <-- Nuevo: Buscar por nombre del Rol
+                Q(first_name__icontains=query) | Q(last_name__icontains=query) |
+                Q(rut__icontains=query) | Q(username__icontains=query) | 
+                Q(email__icontains=query) | Q(rol__nombreRol__icontains=query)
             ).distinct()
         
-        # 2. Ordenamiento con Mapeo
         sort_by = self.request.GET.get('sort', 'first_name')
         if sort_by:
             direction = '-' if sort_by.startswith('-') else ''
             field_name = sort_by.lstrip('-')
             
             mapping = {
-                'username': 'username',
-                'nombres': 'first_name', # Mapeamos 'nombres' a first_name
-                'rut': 'rut',
-                'email': 'email',
-                'estado': 'is_active',
-                'rol': 'rol__nombreRol' # <-- CLAVE: Ordenar por nombre del rol, no por ID
+                'username': 'username', 'nombres': 'first_name', 
+                'rut': 'rut', 'email': 'email', 'estado': 'is_active', 'rol': 'rol__nombreRol'
             }
             
             if field_name in mapping:
-                queryset = queryset.order_by(f"{direction}{mapping[field_name]}")
+                campo_bd = mapping[field_name]
+                if field_name in ['nombres', 'username', 'rut']:
+                    if direction == '-':
+                        queryset = queryset.order_by(Length(campo_bd).desc(), f'-{campo_bd}')
+                    else:
+                        queryset = queryset.order_by(Length(campo_bd), campo_bd)
+                else:
+                    queryset = queryset.order_by(f"{direction}{campo_bd}")
                 
         return queryset
 
@@ -294,8 +289,6 @@ class FarmaciaListView(ListView):
 
     def get_queryset(self):
         queryset = super().get_queryset().select_related('comuna__provincia__region')
-        
-        # 1. Búsqueda
         query = self.request.GET.get('q')
         if query:
             queryset = queryset.filter(
@@ -303,24 +296,30 @@ class FarmaciaListView(ListView):
                 Q(comuna__nombreComuna__icontains=query) | Q(telefono__icontains=query)
             ).distinct()
         
-        # 2. Ordenamiento con Mapeo
         sort_by = self.request.GET.get('sort', 'nombre')
         if sort_by:
             direction = '-' if sort_by.startswith('-') else ''
             field_name = sort_by.lstrip('-')
             
             mapping = {
-                'nombre': 'nombre',
+                'nombre': 'nombre', 
                 'direccion': 'direccion',
-                'telefono': 'telefono',
-                'horario_apertura': 'horario_apertura',
-                'comuna': 'comuna__nombreComuna', # <-- TRADUCCIÓN FK
-                'provincia': 'comuna__provincia__nombreProvincia',
+                'telefono': 'telefono', 'horario_apertura': 'horario_apertura',
+                'comuna': 'comuna__nombreComuna', 'provincia': 'comuna__provincia__nombreProvincia',
                 'region': 'comuna__provincia__region__nombreRegion'
             }
 
             if field_name in mapping:
-                queryset = queryset.order_by(f"{direction}{mapping[field_name]}")
+                campo_bd = mapping[field_name]
+                
+                # --- ORDENAMIENTO ---
+                if field_name in ['nombre', 'direccion']:
+                    if direction == '-':
+                        queryset = queryset.order_by(Length(campo_bd).desc(), f'-{campo_bd}')
+                    else:
+                        queryset = queryset.order_by(Length(campo_bd), campo_bd)
+                else:
+                    queryset = queryset.order_by(f"{direction}{campo_bd}")
 
         return queryset
 
@@ -366,43 +365,37 @@ class MotoristaListView(ListView):
 
     def get_queryset(self):
         queryset = super().get_queryset().select_related('comuna')
-        
-        # Anotación para "Farmacia Actual" (Última asignación)
-        latest_farmacia = AsignacionFarmacia.objects.filter(
-            motorista=OuterRef('pk')
-        ).order_by('-fechaAsignacion', '-idAsignacionFarmacia').values('farmacia__nombre')[:1]
-        
+        latest_farmacia = AsignacionFarmacia.objects.filter(motorista=OuterRef('pk')).order_by('-fechaAsignacion', '-idAsignacionFarmacia').values('farmacia__nombre')[:1]
         queryset = queryset.annotate(farmacia_actual=Subquery(latest_farmacia))
 
-        # 1. Búsqueda (Agregamos búsqueda por nombre de Farmacia)
         query = self.request.GET.get('q')
         if query:
             queryset = queryset.filter(
-                Q(nombres__icontains=query) | 
-                Q(apellido_paterno__icontains=query) | 
-                Q(rut__icontains=query) | 
-                Q(telefono__icontains=query) |
-                Q(comuna__nombreComuna__icontains=query) |
-                Q(asignacionfarmacia__farmacia__nombre__icontains=query) # <-- Búsqueda en historial
+                Q(nombres__icontains=query) | Q(apellido_paterno__icontains=query) | 
+                Q(rut__icontains=query) | Q(telefono__icontains=query) |
+                Q(comuna__nombreComuna__icontains=query) | Q(asignacionfarmacia__farmacia__nombre__icontains=query)
             ).distinct()
             
-        # 2. Ordenamiento
         sort_by = self.request.GET.get('sort', 'nombres')
         if sort_by:
             direction = '-' if sort_by.startswith('-') else ''
             field_name = sort_by.lstrip('-')
             
             mapping = {
-                'nombres': 'nombres',
-                'rut': 'rut',
-                'telefono': 'telefono',
-                'estado': 'estado',
-                'comuna': 'comuna__nombreComuna',
-                'farmacia': 'farmacia_actual' # <-- Ordenar por la anotación
+                'nombres': 'nombres', 'rut': 'rut',
+                'telefono': 'telefono', 'estado': 'estado',
+                'comuna': 'comuna__nombreComuna', 'farmacia': 'farmacia_actual'
             }
 
             if field_name in mapping:
-                queryset = queryset.order_by(f"{direction}{mapping[field_name]}")
+                campo_bd = mapping[field_name]
+                if field_name in ['nombres', 'rut']:
+                    if direction == '-':
+                        queryset = queryset.order_by(Length(campo_bd).desc(), f'-{campo_bd}')
+                    else:
+                        queryset = queryset.order_by(Length(campo_bd), campo_bd)
+                else:
+                    queryset = queryset.order_by(f"{direction}{campo_bd}")
 
         return queryset
 
@@ -452,41 +445,36 @@ class MotoListView(ListView):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        
-        # Anotación para "Motorista Actual"
-        latest_motorista = AsignacionMoto.objects.filter(
-            moto=OuterRef('pk')
-        ).order_by('-fechaAsignacion', '-idAsignacionMoto').values('motorista__nombres')[:1]
-        
+        latest_motorista = AsignacionMoto.objects.filter(moto=OuterRef('pk')).order_by('-fechaAsignacion', '-idAsignacionMoto').values('motorista__nombres')[:1]
         queryset = queryset.annotate(motorista_actual=Subquery(latest_motorista))
         
-        # 1. Búsqueda (Agregamos búsqueda por nombre de Motorista)
         query = self.request.GET.get('q')
         if query:
             queryset = queryset.filter(
-                Q(patente__icontains=query) | 
-                Q(marca__icontains=query) |
-                Q(modelo__icontains=query) |
-                Q(anio__icontains=query) |
-                Q(asignacionmoto__motorista__nombres__icontains=query) # <-- Búsqueda
+                Q(patente__icontains=query) | Q(marca__icontains=query) |
+                Q(modelo__icontains=query) | Q(anio__icontains=query) |
+                Q(asignacionmoto__motorista__nombres__icontains=query)
             ).distinct()
             
-        # 2. Ordenamiento
         sort_by = self.request.GET.get('sort', 'patente')
         if sort_by:
             direction = '-' if sort_by.startswith('-') else ''
             field_name = sort_by.lstrip('-')
             
             mapping = {
-                'patente': 'patente',
-                'marca': 'marca',
-                'modelo': 'modelo',
-                'anio': 'anio',
-                'propietario': 'propietario',
-                'motorista': 'motorista_actual' # <-- Ordenar por anotación
+                'patente': 'patente', 'marca': 'marca', 'modelo': 'modelo',
+                'anio': 'anio', 'propietario': 'propietario', 'motorista': 'motorista_actual'
             }
             if field_name in mapping:
-                queryset = queryset.order_by(f"{direction}{mapping[field_name]}")
+                campo_bd = mapping[field_name]
+                # Aplicamos a Patente, Marca y Modelo
+                if field_name in ['patente', 'marca', 'modelo']:
+                    if direction == '-':
+                        queryset = queryset.order_by(Length(campo_bd).desc(), f'-{campo_bd}')
+                    else:
+                        queryset = queryset.order_by(Length(campo_bd), campo_bd)
+                else:
+                    queryset = queryset.order_by(f"{direction}{campo_bd}")
 
         return queryset
 
@@ -641,36 +629,37 @@ class MovimientoListView(ListView):
     def get_queryset(self):
         queryset = super().get_queryset().filter(movimiento_padre__isnull=True).select_related('tipo_movimiento', 'motorista_asignado')
         
-        # 1. Búsqueda
         query = self.request.GET.get('q')
         if query:
             queryset = queryset.filter(
-                Q(numero_despacho__icontains=query) |
-                Q(id_movimiento__icontains=query) |
-                Q(origen__icontains=query) |
-                Q(destino__icontains=query) |
-                Q(motorista_asignado__nombres__icontains=query) | # <-- Búsqueda Motorista
-                Q(usuario_responsable__first_name__icontains=query)
+                Q(numero_despacho__icontains=query) | Q(id_movimiento__icontains=query) |
+                Q(origen__icontains=query) | Q(destino__icontains=query) |
+                Q(usuario_responsable__first_name__icontains=query) |
+                Q(motorista_asignado__nombres__icontains=query)
             ).distinct()
         
-        # 2. Ordenamiento
         sort_by = self.request.GET.get('sort', '-fecha_movimiento')
         if sort_by:
             direction = '-' if sort_by.startswith('-') else ''
             field_name = sort_by.lstrip('-')
             
             mapping = {
-                'numero_despacho': 'numero_despacho',
-                'fecha_movimiento': 'fecha_movimiento',
-                'estado': 'estado',
-                'tipo_movimiento': 'tipo_movimiento__nombre',
-                'origen': 'origen',    # <-- Agregado
-                'destino': 'destino',  # <-- Agregado
-                'motorista': 'motorista_asignado__nombres' # <-- Agregado FK
+                'numero_despacho': 'numero_despacho', 'fecha_movimiento': 'fecha_movimiento',
+                'estado': 'estado', 'tipo_movimiento': 'tipo_movimiento__nombre',
+                'origen': 'origen', 'destino': 'destino',
+                'motorista': 'motorista_asignado__nombres'
             }
             
             if field_name in mapping:
-                queryset = queryset.order_by(f"{direction}{mapping[field_name]}")
+                campo_bd = mapping[field_name]
+                # Aplicamos a Despacho, Origen, Destino, Motorista
+                if field_name in ['numero_despacho', 'origen', 'destino', 'motorista']:
+                    if direction == '-':
+                        queryset = queryset.order_by(Length(campo_bd).desc(), f'-{campo_bd}')
+                    else:
+                        queryset = queryset.order_by(Length(campo_bd), campo_bd)
+                else:
+                    queryset = queryset.order_by(f"{direction}{campo_bd}")
         
         return queryset
 
@@ -701,7 +690,6 @@ class MovimientoCreateView(SuccessMessageMixin, CreateView):
         return initial
     
     def form_valid(self, form):
-        # Asignamos el usuario logueado si existe, sino None (cuidado si no hay auth)
         if self.request.user.is_authenticated:
             form.instance.usuario_responsable = self.request.user
         return super().form_valid(form)

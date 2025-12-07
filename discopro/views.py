@@ -86,7 +86,6 @@ class ReporteMovimientosView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        
         ahora = timezone.now()
         hoy_local = timezone.localtime(ahora)
         
@@ -95,18 +94,22 @@ class ReporteMovimientosView(TemplateView):
         inicio_mes = hoy_local.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         inicio_anio = hoy_local.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
 
-        # 1. Diario
+        # 1. Diario (Mantenemos todos para ver el flujo del día)
         qs_hoy = Movimiento.objects.filter(fecha_movimiento__gte=inicio_dia, fecha_movimiento__lt=fin_dia)
         context['total_hoy'] = qs_hoy.count()
         context['estados_hoy'] = qs_hoy.values('estado').annotate(total=Count('estado'))
 
-        # 2. Mensual
+        # 2. Mensual (Mantenemos todos para ver la carga total del mes)
         qs_mes = Movimiento.objects.filter(fecha_movimiento__gte=inicio_mes)
         context['total_mes'] = qs_mes.count()
         context['tipos_mes'] = qs_mes.values('tipo_movimiento__nombre').annotate(total=Count('tipo_movimiento'))
 
-        # 3. Anual
-        qs_anio = Movimiento.objects.filter(fecha_movimiento__gte=inicio_anio).order_by('fecha_movimiento')
+        # 3. Anual ( Solo contamos los 'completado' para la tendencia de productividad)
+        qs_anio = Movimiento.objects.filter(
+            fecha_movimiento__gte=inicio_anio,
+            estado='completado'
+        ).order_by('fecha_movimiento')
+        
         context['total_anio'] = qs_anio.count()
         
         datos_agrupados = defaultdict(int)
@@ -121,16 +124,15 @@ class ReporteMovimientosView(TemplateView):
         
         evolucion_anual_lista.sort(key=lambda x: x['mes'])
         context['evolucion_anual'] = evolucion_anual_lista
-
         return context
 
 class ExportarReportePDFView(View):
     def get(self, request, *args, **kwargs):
         tipo = request.GET.get('tipo', 'diario')
-        
         ahora = timezone.now()
         hoy_local = timezone.localtime(ahora)
         
+        # Definición de fechas (Igual que antes)
         inicio_dia = hoy_local.replace(hour=0, minute=0, second=0, microsecond=0)
         fin_dia = inicio_dia + timedelta(days=1)
         inicio_mes = hoy_local.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
@@ -138,29 +140,39 @@ class ExportarReportePDFView(View):
 
         data = {}
         titulo = ""
-        movimientos = []
+        movimientos = [] # QuerySet base
 
+        # 1. Determinar el rango de fechas y datos estadísticos
         if tipo == 'diario':
             titulo = f"Reporte Diario ({hoy_local.strftime('%d-%m-%Y')})"
-            movimientos = Movimiento.objects.filter(fecha_movimiento__gte=inicio_dia, fecha_movimiento__lt=fin_dia)
+            movimientos = Movimiento.objects.filter(fecha_movimiento__gte=inicio_dia, fecha_movimiento__lt=fin_dia).order_by('-fecha_movimiento')
+            
+            # Estadísticas para el cuadro resumen
             data['detalles'] = movimientos.values('estado').annotate(total=Count('estado'))
             data['columnas'] = ['Estado', 'Cantidad']
 
         elif tipo == 'mensual':
             titulo = f"Reporte Mensual ({hoy_local.strftime('%B %Y')})"
-            movimientos = Movimiento.objects.filter(fecha_movimiento__gte=inicio_mes)
+            movimientos = Movimiento.objects.filter(fecha_movimiento__gte=inicio_mes).order_by('-fecha_movimiento')
+            
+            # Estadísticas
             data['detalles'] = movimientos.values('tipo_movimiento__nombre').annotate(total=Count('tipo_movimiento'))
             data['columnas'] = ['Tipo de Movimiento', 'Cantidad']
 
         elif tipo == 'anual':
             titulo = f"Reporte Anual ({hoy_local.year})"
+            # NOTA: Quitamos el filtro 'completado' para poder listar también los pendientes/anulados en el detalle
             movimientos = Movimiento.objects.filter(fecha_movimiento__gte=inicio_anio).order_by('fecha_movimiento')
             
+            # Estadísticas (Agrupado por mes)
             datos_agrupados = defaultdict(int)
             for mov in movimientos:
-                fecha_local = timezone.localtime(mov.fecha_movimiento)
-                mes_key = fecha_local.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-                datos_agrupados[mes_key] += 1
+                # Para la estadística anual, ¿quieres contar solo los completados o todos?
+                # Si quieres que la estadística siga siendo "productividad", filtramos aquí solo para el gráfico:
+                if mov.estado == 'completado': 
+                    fecha_local = timezone.localtime(mov.fecha_movimiento)
+                    mes_key = fecha_local.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+                    datos_agrupados[mes_key] += 1
             
             lista_anual = []
             for fecha, cantidad in datos_agrupados.items():
@@ -169,16 +181,25 @@ class ExportarReportePDFView(View):
             
             lista_anual.sort(key=lambda x: x['nombre'])
             data['detalles'] = lista_anual
-            data['columnas'] = ['Mes', 'Cantidad']
+            data['columnas'] = ['Mes', 'Cantidad (Completados)']
             data['es_anual'] = True
+
+        # 2. Separar los movimientos por estado para el listado detallado
+        # Usamos select_related para que sea eficiente en el PDF (trae nombres de FKs)
+        movimientos_full = movimientos.select_related('tipo_movimiento', 'motorista_asignado', 'usuario_responsable')
 
         context = {
             'titulo': titulo,
             'fecha_impresion': hoy_local,
             'usuario': request.user,
-            'data': data,
-            'total_general': movimientos.count() if hasattr(movimientos, 'count') else len(movimientos)
+            'data': data, # Datos del resumen estadístico
+            'total_general': movimientos.count(),
+            # Listas separadas:
+            'movimientos_completados': movimientos_full.filter(estado='completado'),
+            'movimientos_pendientes': movimientos_full.filter(estado='pendiente'),
+            'movimientos_anulados': movimientos_full.filter(estado='anulado'),
         }
+        
         return render_to_pdf('discopro/Movimiento/reporte_pdf.html', context)
 
 # --- CRUD USUARIOS  ---

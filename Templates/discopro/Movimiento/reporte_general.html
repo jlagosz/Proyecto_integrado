@@ -1,129 +1,183 @@
 {% extends 'discopro/base.html' %}
 {% load static %}
 
-{% block title %}Reporte de Movimientos{% endblock %}
+{% block title %}Reporte de Gestión{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Reporte de Gestión</h1>
-        <a href="{% url 'movimiento_lista' %}" class="btn btn-outline-secondary">Volver al Listado</a>
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <div>
+            <h1 class="h2 text-dark">Reporte de Gestión</h1>
+            <p class="text-muted mb-0">Resumen estadístico del sistema al {{ now|date:"d de F Y" }}</p>
+        </div>
+        <a href="{% url 'movimiento_lista' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Volver al Listado
+        </a>
     </div>
 
-    <div class="row text-center mb-4">
+    <div class="row mb-4">
         <div class="col-md-4">
-            <div class="card text-white bg-primary mb-3 shadow">
-                <div class="card-header">Movimientos de HOY</div>
+            <div class="card border-0 shadow-sm h-100" style="border-left: 5px solid #0d6efd !important;">
                 <div class="card-body">
-                    <h1 class="display-4 fw-bold">{{ total_hoy }}</h1>
-                    <p class="card-text">Registrados el {{ now|date:"d/m/Y" }}</p>
-                    <a href="{% url 'reporte_pdf' %}?tipo=diario" class="btn btn-light btn-sm w-100 fw-bold" target="_blank">
-                        Descargar PDF Diario
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="text-uppercase text-muted fw-bold small">Movimientos Hoy</h6>
+                            <h2 class="display-5 fw-bold text-dark mb-0">{{ total_hoy }}</h2>
+                        </div>
+                        <div class="bg-primary bg-opacity-10 p-3 rounded">
+                            <i class="bi bi-calendar-event text-primary fs-3"></i>
+                        </div>
+                    </div>
+                    <hr class="my-3">
+                    <a href="{% url 'reporte_pdf' %}?tipo=diario" target="_blank" class="btn btn-sm btn-outline-primary w-100">
+                        <i class="bi bi-file-earmark-pdf"></i> Reporte Diario
                     </a>
                 </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card text-white bg-success mb-3 shadow">
-                <div class="card-header">Total ESTE MES</div>
-                <div class="card-body">
-                    <h1 class="display-4 fw-bold">{{ total_mes }}</h1>
-                    <p class="card-text">Acumulado mensual</p>
-                    <a href="{% url 'reporte_pdf' %}?tipo=mensual" class="btn btn-light btn-sm w-100 fw-bold" target="_blank">
-                        Descargar PDF Mensual
-                    </a>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card text-white bg-dark mb-3 shadow">
-                <div class="card-header">Total AÑO ACTUAL</div>
-                <div class="card-body">
-                    <h1 class="display-4 fw-bold">{{ total_anio }}</h1>
-                    <p class="card-text">Acumulado anual</p>
-                    <a href="{% url 'reporte_pdf' %}?tipo=anual" class="btn btn-light btn-sm w-100 fw-bold" target="_blank">
-                        Descargar PDF Anual
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-md-6 mb-4">
-            <div class="card h-100 shadow-sm">
-                <div class="card-header bg-light">
-                    <h5 class="mb-0">Estados de Hoy</h5>
-                </div>
-                <ul class="list-group list-group-flush">
-                    {% for item in estados_hoy %}
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        {{ item.estado|title }}
-                        <span class="badge bg-primary rounded-pill">{{ item.total }}</span>
-                    </li>
-                    {% empty %}
-                    <li class="list-group-item text-muted">No hay movimientos hoy.</li>
-                    {% endfor %}
-                </ul>
             </div>
         </div>
 
-        <div class="col-md-6 mb-4">
-            <div class="card h-100 shadow-sm">
-                <div class="card-header bg-light">
-                    <h5 class="mb-0">Tipos de Movimiento (Mes)</h5>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100" style="border-left: 5px solid #198754 !important;">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="text-uppercase text-muted fw-bold small">Total Mes Actual</h6>
+                            <h2 class="display-5 fw-bold text-dark mb-0">{{ total_mes }}</h2>
+                        </div>
+                        <div class="bg-success bg-opacity-10 p-3 rounded">
+                            <i class="bi bi-calendar-month text-success fs-3"></i>
+                        </div>
+                    </div>
+                    <hr class="my-3">
+                    <a href="{% url 'reporte_pdf' %}?tipo=mensual" target="_blank" class="btn btn-sm btn-outline-success w-100">
+                        <i class="bi bi-file-earmark-pdf"></i> Reporte Mensual
+                    </a>
                 </div>
-                <ul class="list-group list-group-flush">
-                    {% for item in tipos_mes %}
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        {{ item.tipo_movimiento__nombre }}
-                        <span class="badge bg-success rounded-pill">{{ item.total }}</span>
-                    </li>
-                    {% empty %}
-                    <li class="list-group-item text-muted">Sin datos este mes.</li>
-                    {% endfor %}
-                </ul>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100" style="border-left: 5px solid #212529 !important;">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="text-uppercase text-muted fw-bold small">Acumulado Año</h6>
+                            <h2 class="display-5 fw-bold text-dark mb-0">{{ total_anio }}</h2>
+                        </div>
+                        <div class="bg-dark bg-opacity-10 p-3 rounded">
+                            <i class="bi bi-graph-up text-dark fs-3"></i>
+                        </div>
+                    </div>
+                    <hr class="my-3">
+                    <a href="{% url 'reporte_pdf' %}?tipo=anual" target="_blank" class="btn btn-sm btn-outline-dark w-100">
+                        <i class="bi bi-file-earmark-pdf"></i> Reporte Anual
+                    </a>
+                </div>
             </div>
         </div>
     </div>
 
     <div class="row">
-        <div class="col-12">
-            <div class="card shadow-sm">
-                <div class="card-header bg-light">
-                    <h5 class="mb-0">Evolución Anual (Mes a Mes)</h5>
+        <div class="col-lg-4 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0 fw-bold"><i class="bi bi-pie-chart me-2"></i>Estados (Hoy)</h6>
                 </div>
-                <div class="card-body">
-                    <table class="table table-striped table-hover">
-                        <thead>
-                            <tr>
-                                <th>Mes</th>
-                                <th>Total Movimientos</th>
-                                <th style="width: 50%;">Visualización</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for item in evolucion_anual %}
-                            <tr>
-                                <td>{{ item.mes|date:"F Y"|title }}</td>
-                                <td class="fw-bold">{{ item.total }}</td>
-                                <td>
-                                    <div class="progress" style="height: 20px;">
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        {% for item in estados_hoy %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-4 py-3">
+                            <span class="text-secondary fw-medium">{{ item.estado|title }}</span>
+                            <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3">{{ item.total }}</span>
+                        </li>
+                        {% empty %}
+                        <li class="list-group-item text-center text-muted py-4">
+                            <i class="bi bi-inbox fs-4 d-block mb-2"></i>
+                            Sin movimientos registrados hoy.
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0 fw-bold"><i class="bi bi-tag me-2"></i>Tipos de Movimiento (Mes)</h6>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        {% for item in tipos_mes %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-4 py-3">
+                            <span class="text-secondary fw-medium">{{ item.tipo_movimiento__nombre }}</span>
+                            <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3">{{ item.total }}</span>
+                        </li>
+                        {% empty %}
+                        <li class="list-group-item text-center text-muted py-4">Sin datos este mes.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0 fw-bold"><i class="bi bi-bar-chart-steps me-2"></i>Tendencia Anual</h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light text-muted small text-uppercase">
+                                <tr>
+                                    <th class="ps-4">Mes</th>
+                                    <th class="text-center">Total</th>
+                                    <th class="pe-4 text-end">Progreso</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in evolucion_anual %}
+                                <tr>
+                                    <td class="ps-4 fw-medium">{{ item.mes|date:"M"|upper }}</td>
+                                    <td class="text-center fw-bold">{{ item.total }}</td>
+                                    <td class="pe-4" style="width: 40%;">
                                         {% widthratio item.total total_anio 100 as porcentaje %}
                                         
-                                    </div>
-                                </td>
-                            </tr>
-                            {% empty %}
-                            <tr>
-                                <td colspan="3" class="text-center text-muted">No hay datos registrados este año.</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                                        <div class="progress" style="height: 6px;">
+                                            <div class="progress-bar bg-dark js-progress-bar" role="progressbar" 
+                                                 data-width="{{ porcentaje }}"
+                                                 aria-valuenow="{{ porcentaje }}" aria-valuemin="0" aria-valuemax="100">
+                                            </div>
+                                        </div>
+                                        
+                                        <small class="text-muted d-block text-end mt-1" style="font-size: 0.7rem;">{{ porcentaje }}%</small>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center text-muted py-4">No hay datos anuales.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const barras = document.querySelectorAll('.js-progress-bar');
+        
+        barras.forEach(function(barra) {
+            const ancho = barra.getAttribute('data-width');
+            if (ancho) {
+                barra.style.width = ancho + '%';
+            }
+        });
+    });
+</script>
 {% endblock %}

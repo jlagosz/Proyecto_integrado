@@ -3,26 +3,45 @@
 <head>
     <title>Reporte de Movimientos</title>
     <style type="text/css">
-        body { font-family: Helvetica, sans-serif; color: #333; }
-        h1 { text-align: center; color: #0056b3; }
-        .header { margin-bottom: 20px; border-bottom: 2px solid #ddd; padding-bottom: 10px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th { background-color: #f2f2f2; padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
-        td { padding: 8px; border-bottom: 1px solid #eee; }
-        .footer { position: fixed; bottom: 0px; font-size: 10px; text-align: center; color: #888; }
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+        body { font-family: Helvetica, sans-serif; color: #333; font-size: 11px; }
+        
+        /* Encabezado */
+        .header { margin-bottom: 20px; border-bottom: 2px solid #0056b3; padding-bottom: 10px; }
+        h1 { text-align: center; color: #0056b3; font-size: 18px; margin: 0; }
+        .meta-info { text-align: center; color: #666; font-size: 10px; margin-top: 5px; }
+
+        /* Tablas */
+        h3 { margin-top: 25px; margin-bottom: 10px; color: #444; border-bottom: 1px solid #ccc; padding-bottom: 5px; }
+        
+        table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+        th { background-color: #f2f2f2; padding: 6px; text-align: left; border-bottom: 1px solid #999; font-weight: bold; font-size: 10px; }
+        td { padding: 6px; border-bottom: 1px solid #eee; font-size: 10px; }
+        
+        /* Estilos específicos para estados */
+        .section-title { font-size: 14px; font-weight: bold; margin-top: 30px; margin-bottom: 10px; padding: 5px; color: white; }
+        .bg-success { background-color: #28a745; } /* Verde para completados */
+        .bg-warning { background-color: #ffc107; color: #333; } /* Amarillo para pendientes */
+        .bg-danger { background-color: #dc3545; } /* Rojo para anulados */
+
         .total-row { font-weight: bold; background-color: #e9ecef; }
+        .footer { position: fixed; bottom: 0px; left: 0px; right: 0px; font-size: 9px; text-align: center; color: #888; border-top: 1px solid #eee; padding-top: 5px; }
     </style>
 </head>
 <body>
     <div class="header">
         <h1>{{ titulo }}</h1>
-        <p><strong>Generado por:</strong> {{ usuario.nombres }} {{ usuario.apellidos }}<br>
-           <strong>Fecha:</strong> {{ fecha_impresion|date:"d/m/Y H:i" }}</p>
+        <div class="meta-info">
+            <strong>Generado por:</strong> {{ usuario.first_name }} {{ usuario.last_name }} | 
+            <strong>Fecha:</strong> {{ fecha_impresion|date:"d/m/Y H:i" }}
+        </div>
     </div>
 
     <h3>Resumen Estadístico</h3>
-    <table>
-        <thead>
+    <table style="width: 60%; margin: 0 auto;"> <thead>
             <tr>
                 {% for col in data.columnas %}
                 <th>{{ col }}</th>
@@ -33,18 +52,17 @@
             {% for item in data.detalles %}
             <tr>
                 {% if data.es_anual %}
-                    <td>{{ item.nombre }}</td> {% elif data.columnas.0 == 'Estado' %}
+                    <td>{{ item.nombre }}</td> 
+                {% elif data.columnas.0 == 'Estado' %}
                     <td>{{ item.estado|title }}</td>
                 {% else %}
                     <td>{{ item.tipo_movimiento__nombre }}</td>
                 {% endif %}
-                
                 <td>{{ item.total }}</td>
             </tr>
             {% empty %}
-            <tr><td colspan="2">No hay datos para este reporte.</td></tr>
+            <tr><td colspan="2">No hay datos para el resumen.</td></tr>
             {% endfor %}
-            
             <tr class="total-row">
                 <td>TOTAL GENERAL</td>
                 <td>{{ total_general }}</td>
@@ -52,8 +70,86 @@
         </tbody>
     </table>
 
+    {% if movimientos_completados %}
+    <div class="section-title bg-success">Movimientos Completados ({{ movimientos_completados|length }})</div>
+    <table>
+        <thead>
+            <tr>
+                <th width="15%">N° Despacho</th>
+                <th width="20%">Tipo</th>
+                <th width="20%">Motorista</th>
+                <th width="25%">Ruta (Origen -> Destino)</th>
+                <th width="20%">Fecha</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for mov in movimientos_completados %}
+            <tr>
+                <td>{{ mov.numero_despacho }}</td>
+                <td>{{ mov.tipo_movimiento.nombre }}</td>
+                <td>{{ mov.motorista_asignado.nombres|default:"--" }}</td>
+                <td>{{ mov.origen }} <br> &rarr; {{ mov.destino }}</td>
+                <td>{{ mov.fecha_movimiento|date:"d/m/Y H:i" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+
+    {% if movimientos_pendientes %}
+    <div class="section-title bg-warning">Movimientos Pendientes ({{ movimientos_pendientes|length }})</div>
+    <table>
+        <thead>
+            <tr>
+                <th width="15%">N° Despacho</th>
+                <th width="20%">Tipo</th>
+                <th width="20%">Motorista</th>
+                <th width="25%">Ruta</th>
+                <th width="20%">Fecha Ingreso</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for mov in movimientos_pendientes %}
+            <tr>
+                <td>{{ mov.numero_despacho }}</td>
+                <td>{{ mov.tipo_movimiento.nombre }}</td>
+                <td>{{ mov.motorista_asignado.nombres|default:"Sin asignar" }}</td>
+                <td>{{ mov.origen }} <br> &rarr; {{ mov.destino }}</td>
+                <td>{{ mov.fecha_movimiento|date:"d/m/Y H:i" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+
+    {% if movimientos_anulados %}
+    <div class="section-title bg-danger">Movimientos Anulados ({{ movimientos_anulados|length }})</div>
+    <table>
+        <thead>
+            <tr>
+                <th width="15%">N° Despacho</th>
+                <th width="20%">Tipo</th>
+                <th width="20%">Responsable</th>
+                <th width="25%">Ruta</th>
+                <th width="20%">Fecha</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for mov in movimientos_anulados %}
+            <tr>
+                <td>{{ mov.numero_despacho }}</td>
+                <td>{{ mov.tipo_movimiento.nombre }}</td>
+                <td>{{ mov.usuario_responsable.first_name }}</td>
+                <td>{{ mov.origen }} <br> &rarr; {{ mov.destino }}</td>
+                <td>{{ mov.fecha_movimiento|date:"d/m/Y H:i" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+
     <div class="footer">
-        Reporte generado automáticamente por Sistema Discopro
+        Reporte generado automáticamente por Sistema Discopro - Página <pdf:pagenumber>
     </div>
 </body>
 </html>

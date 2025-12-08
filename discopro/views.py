@@ -14,8 +14,10 @@ from datetime import timedelta
 from django.contrib import messages
 from django.contrib.messages.views import SuccessMessageMixin
 
-# --- AUTENTICACIÓN (Funciones básicas) ---
+# --- AUTENTICACIÓN (Funciones básicas y Decoradores) ---
 from django.contrib.auth import login, logout
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin 
 from .forms import CustomLoginForm
 
 from discopro.utils import render_to_pdf 
@@ -35,7 +37,7 @@ from .models import (
 # --- VISTAS DE LOGIN/LOGOUT ---
 
 def login_view(request):
-    """Maneja el inicio de sesión."""
+    """Maneja el inicio de sesión con redirección."""
     if request.user.is_authenticated:
         return redirect('index')
 
@@ -45,7 +47,11 @@ def login_view(request):
             user = form.get_user()
             login(request, user) 
             messages.success(request, f"¡Bienvenido, {user.first_name}!")
-            return redirect('index')
+            next_url = request.POST.get('next') or request.GET.get('next')
+            if next_url:
+                return redirect(next_url)
+            else:
+                return redirect('index')
         else:
             messages.error(request, "Usuario o contraseña incorrectos.")
     else:
@@ -61,6 +67,7 @@ def logout_view(request):
 
 # --- VISTA PRINCIPAL (DASHBOARD) ---
 
+@login_required
 def index(request: HttpRequest):
     """Dashboard principal."""
     total_farmacias = Farmacia.objects.count()
@@ -81,7 +88,7 @@ def index(request: HttpRequest):
 
 # --- REPORTES ---
 
-class ReporteMovimientosView(TemplateView):
+class ReporteMovimientosView(LoginRequiredMixin, TemplateView):
     template_name = 'discopro/Movimiento/reporte_general.html'
 
     def get_context_data(self, **kwargs):
@@ -126,7 +133,7 @@ class ReporteMovimientosView(TemplateView):
         context['evolucion_anual'] = evolucion_anual_lista
         return context
 
-class ExportarReportePDFView(View):
+class ExportarReportePDFView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         tipo = request.GET.get('tipo', 'diario')
         ahora = timezone.now()
@@ -203,7 +210,7 @@ class ExportarReportePDFView(View):
 
 # --- CRUD USUARIOS  ---
 
-class UsuarioListView(ListView):
+class UsuarioListView(LoginRequiredMixin, ListView):
     model = Usuario
     template_name = 'discopro/Usuario/usuario_list.html'
     context_object_name = 'usuarios'
@@ -241,21 +248,21 @@ class UsuarioListView(ListView):
                 
         return queryset
 
-class UsuarioCreateView(SuccessMessageMixin, CreateView):
+class UsuarioCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
     model = Usuario
     form_class = UsuarioForm
     template_name = 'discopro/Usuario/usuario_form.html'
     success_url = reverse_lazy('usuario_lista')
     success_message = "Usuario creado exitosamente."
 
-class UsuarioUpdateView(SuccessMessageMixin, UpdateView):
+class UsuarioUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
     model = Usuario
     form_class = UsuarioForm
     template_name = 'discopro/Usuario/usuario_form.html'
     success_url = reverse_lazy('usuario_lista')
     success_message = "Usuario actualizado exitosamente."
 
-class UsuarioDeleteView(DeleteView):
+class UsuarioDeleteView(LoginRequiredMixin, DeleteView):
     model = Usuario
     template_name = 'discopro/confirmar_eliminar.html'
     success_url = reverse_lazy('usuario_lista')
@@ -266,7 +273,7 @@ class UsuarioDeleteView(DeleteView):
 
 # --- VISTAS DE USUARIO Y CONFIGURACIÓN ---
 
-class MiCuentaView(DetailView):
+class MiCuentaView(LoginRequiredMixin, DetailView):
     """Vista para ver el perfil del usuario logueado."""
     model = Usuario
     template_name = 'discopro/Usuario/mi_cuenta.html'
@@ -275,13 +282,13 @@ class MiCuentaView(DetailView):
     def get_object(self):
         return self.request.user
 
-class ConfiguracionView(TemplateView):
+class ConfiguracionView(LoginRequiredMixin, TemplateView):
     """Vista placeholder para configuración."""
     template_name = 'discopro/Usuario/configuracion.html'
 
 # --- CRUD FARMACIAS ---
 
-class FarmaciaListView(ListView):
+class FarmaciaListView(LoginRequiredMixin, ListView):
     model = Farmacia
     template_name = 'discopro/Farmacia/farmacia_list.html'
     context_object_name = 'farmacias'
@@ -323,21 +330,21 @@ class FarmaciaListView(ListView):
 
         return queryset
 
-class FarmaciaCreateView(SuccessMessageMixin, CreateView):
+class FarmaciaCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
     model = Farmacia
     form_class = FarmaciaForm
     template_name = 'discopro/Farmacia/farmacia_form.html'
     success_url = reverse_lazy('farmacia_lista')
     success_message = "Farmacia creada exitosamente."
 
-class FarmaciaUpdateView(SuccessMessageMixin, UpdateView):
+class FarmaciaUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
     model = Farmacia
     form_class = FarmaciaForm
     template_name = 'discopro/Farmacia/farmacia_form.html'
     success_url = reverse_lazy('farmacia_lista')
     success_message = "Farmacia actualizada exitosamente."
 
-class FarmaciaDeleteView(DeleteView):
+class FarmaciaDeleteView(LoginRequiredMixin, DeleteView):
     model = Farmacia
     template_name = 'discopro/confirmar_eliminar.html'
     success_url = reverse_lazy('farmacia_lista')
@@ -346,7 +353,7 @@ class FarmaciaDeleteView(DeleteView):
         messages.success(self.request, "Farmacia eliminada exitosamente.")
         return super().form_valid(form)
     
-class FarmaciaDetailView(DetailView):
+class FarmaciaDetailView(LoginRequiredMixin, DetailView):
     model = Farmacia
     template_name = 'discopro/Farmacia/farmacia_detail.html'
     context_object_name = 'farmacia'
@@ -357,7 +364,7 @@ class FarmaciaDetailView(DetailView):
 
 # --- CRUD MOTORISTAS ---
 
-class MotoristaListView(ListView):
+class MotoristaListView(LoginRequiredMixin, ListView):
     model = Motorista
     template_name = 'discopro/Motorista/motorista_list.html'
     context_object_name = 'motoristas'
@@ -399,7 +406,7 @@ class MotoristaListView(ListView):
 
         return queryset
 
-class MotoristaDetailView(DetailView):
+class MotoristaDetailView(LoginRequiredMixin, DetailView):
     model = Motorista
     template_name = 'discopro/Motorista/motorista_detail.html'
     context_object_name = 'motorista'
@@ -412,21 +419,21 @@ class MotoristaDetailView(DetailView):
         context['contactos'] = motorista.contactos_emergencia.all()
         return context
 
-class MotoristaCreateView(SuccessMessageMixin, CreateView):
+class MotoristaCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
     model = Motorista
     form_class = MotoristaForm
     template_name = 'discopro/Motorista/motorista_form.html'
     success_url = reverse_lazy('motorista_lista')
     success_message = "Motorista registrado exitosamente."
 
-class MotoristaUpdateView(SuccessMessageMixin, UpdateView):
+class MotoristaUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
     model = Motorista
     form_class = MotoristaForm
     template_name = 'discopro/Motorista/motorista_form.html'
     success_url = reverse_lazy('motorista_lista')
     success_message = "Datos del motorista actualizados correctamente."
 
-class MotoristaDeleteView(DeleteView):
+class MotoristaDeleteView(LoginRequiredMixin, DeleteView):
     model = Motorista
     template_name = 'discopro/confirmar_eliminar.html'
     success_url = reverse_lazy('motorista_lista')
@@ -437,7 +444,7 @@ class MotoristaDeleteView(DeleteView):
 
 # --- CRUD MOTOS ---
 
-class MotoListView(ListView):
+class MotoListView(LoginRequiredMixin, ListView):
     model = Moto
     template_name = 'discopro/Moto/moto_list.html'
     context_object_name = 'motos'
@@ -478,7 +485,7 @@ class MotoListView(ListView):
 
         return queryset
 
-class MotoDetailView(DetailView):
+class MotoDetailView(LoginRequiredMixin, DetailView):
     model = Moto
     template_name = 'discopro/Moto/moto_detail.html'
     context_object_name = 'moto'
@@ -489,21 +496,21 @@ class MotoDetailView(DetailView):
         context['asignaciones_moto'] = AsignacionMoto.objects.filter(moto=moto).select_related('motorista').order_by('-fechaAsignacion')
         return context
 
-class MotoCreateView(SuccessMessageMixin, CreateView):
+class MotoCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
     model = Moto
     form_class = MotoForm
     template_name = 'discopro/Moto/moto_form.html'
     success_url = reverse_lazy('moto_lista')
     success_message = "Moto registrada exitosamente."
 
-class MotoUpdateView(SuccessMessageMixin, UpdateView):
+class MotoUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
     model = Moto
     form_class = MotoForm
     template_name = 'discopro/Moto/moto_form.html'
     success_url = reverse_lazy('moto_lista')
     success_message = "Datos de la moto actualizados."
 
-class MotoDeleteView(DeleteView):
+class MotoDeleteView(LoginRequiredMixin, DeleteView):
     model = Moto
     template_name = 'discopro/confirmar_eliminar.html'
     success_url = reverse_lazy('moto_lista')
@@ -514,7 +521,7 @@ class MotoDeleteView(DeleteView):
 
 # --- ASIGNACIONES Y DOCUMENTOS ---
 
-class AsignacionFarmaciaCreateView(SuccessMessageMixin, CreateView):
+class AsignacionFarmaciaCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
     model = AsignacionFarmacia
     form_class = AsignacionFarmaciaForm
     template_name = 'discopro/Asignaciones/asignacion_farmacia_form.html'
@@ -532,7 +539,7 @@ class AsignacionFarmaciaCreateView(SuccessMessageMixin, CreateView):
     def get_success_url(self):
         return reverse_lazy('motorista_detalle', kwargs={'pk': self.kwargs['motorista_pk']})
 
-class AsignacionMotoCreateView(SuccessMessageMixin, CreateView):
+class AsignacionMotoCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
     model = AsignacionMoto
     form_class = AsignacionMotoForm
     template_name = 'discopro/Asignaciones/asignacion_moto_form.html'
@@ -550,7 +557,7 @@ class AsignacionMotoCreateView(SuccessMessageMixin, CreateView):
     def get_success_url(self):
         return reverse_lazy('moto_detalle', kwargs={'pk': self.kwargs['moto_pk']})
     
-class DocumentacionMotoUpdateView(SuccessMessageMixin, UpdateView):
+class DocumentacionMotoUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
     model = DocumentacionMoto
     form_class = DocumentacionMotoForm
     template_name = 'discopro/Moto/documentacion_moto_form.html'
@@ -571,7 +578,7 @@ class DocumentacionMotoUpdateView(SuccessMessageMixin, UpdateView):
     def get_success_url(self):
         return reverse_lazy('moto_detalle', kwargs={'pk': self.object.moto_id})
 
-class MantenimientoCreateView(SuccessMessageMixin, CreateView):
+class MantenimientoCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
     model = Mantenimiento
     form_class = MantenimientoForm
     template_name = 'discopro/Moto/mantenimiento_form.html'
@@ -589,7 +596,7 @@ class MantenimientoCreateView(SuccessMessageMixin, CreateView):
     def get_success_url(self):
         return reverse_lazy('moto_detalle', kwargs={'pk': self.object.moto.pk})
 
-class ContactoEmergenciaCreateView(SuccessMessageMixin, CreateView):
+class ContactoEmergenciaCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
     model = ContactoEmergencia
     form_class = ContactoEmergenciaForm
     template_name = 'discopro/Motorista/contacto_emergencia_form.html'
@@ -607,7 +614,7 @@ class ContactoEmergenciaCreateView(SuccessMessageMixin, CreateView):
     def get_success_url(self):
         return reverse_lazy('motorista_detalle', kwargs={'pk': self.kwargs['motorista_pk']})
 
-class ContactoEmergenciaDeleteView(DeleteView):
+class ContactoEmergenciaDeleteView(LoginRequiredMixin, DeleteView):
     model = ContactoEmergencia
     template_name = 'discopro/confirmar_eliminar.html'
     
@@ -620,7 +627,7 @@ class ContactoEmergenciaDeleteView(DeleteView):
 
 # --- CRUD MOVIMIENTOS ---
 
-class MovimientoListView(ListView):
+class MovimientoListView(LoginRequiredMixin, ListView):
     model = Movimiento
     template_name = 'discopro/Movimiento/movimiento_list.html'
     context_object_name = 'movimientos'
@@ -663,7 +670,7 @@ class MovimientoListView(ListView):
         
         return queryset
 
-class MovimientoDetailView(DetailView):
+class MovimientoDetailView(LoginRequiredMixin, DetailView):
     model = Movimiento
     template_name = 'discopro/Movimiento/movimiento_detail.html'
     context_object_name = 'movimiento'
@@ -673,7 +680,7 @@ class MovimientoDetailView(DetailView):
         context['tramos_hijos'] = Movimiento.objects.filter(movimiento_padre=self.object).order_by('fecha_movimiento')
         return context
 
-class MovimientoCreateView(SuccessMessageMixin, CreateView):
+class MovimientoCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
     model = Movimiento
     form_class = MovimientoForm
     template_name = 'discopro/Movimiento/movimiento_padre_form.html'
@@ -697,7 +704,7 @@ class MovimientoCreateView(SuccessMessageMixin, CreateView):
     def get_success_url(self):
         return self.object.get_absolute_url()
 
-class MovimientoUpdateView(SuccessMessageMixin, UpdateView):
+class MovimientoUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
     model = Movimiento
     form_class = MovimientoForm
     template_name = 'discopro/Movimiento/movimiento_padre_form.html'
@@ -711,7 +718,7 @@ class MovimientoUpdateView(SuccessMessageMixin, UpdateView):
     def get_success_url(self):
         return self.object.get_absolute_url()
 
-class MovimientoDeleteView(DeleteView):
+class MovimientoDeleteView(LoginRequiredMixin, DeleteView):
     model = Movimiento
     template_name = 'discopro/confirmar_eliminar.html'
     success_url = reverse_lazy('movimiento_lista')
@@ -720,7 +727,7 @@ class MovimientoDeleteView(DeleteView):
         messages.success(self.request, "Movimiento eliminado exitosamente.")
         return super().form_valid(form)
 
-class TramoCreateView(SuccessMessageMixin, CreateView):
+class TramoCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
     model = Movimiento
     form_class = MovimientoForm
     template_name = 'discopro/Movimiento/tramo_form.html'
@@ -775,7 +782,7 @@ class TramoCreateView(SuccessMessageMixin, CreateView):
             form.instance.usuario_responsable = self.request.user
         return super().form_valid(form)
 
-class TramoUpdateView(SuccessMessageMixin, UpdateView):
+class TramoUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
     model = Movimiento
     form_class = MovimientoForm
     template_name = 'discopro/Movimiento/tramo_form.html'
@@ -789,7 +796,7 @@ class TramoUpdateView(SuccessMessageMixin, UpdateView):
     def get_success_url(self):
         return reverse_lazy('movimiento_detalle', kwargs={'pk': self.object.movimiento_padre.pk})
 
-class TramoDeleteView(DeleteView):
+class TramoDeleteView(LoginRequiredMixin, DeleteView):
     model = Movimiento
     template_name = 'discopro/confirmar_eliminar.html'
     
@@ -802,11 +809,13 @@ class TramoDeleteView(DeleteView):
 
 
 # --- VISTAS AJAX  ---
+@login_required
 def load_provincias(request):
     region_id = request.GET.get('region')
     provincias = Provincia.objects.filter(region_id=region_id).order_by('nombreProvincia')
     return JsonResponse(list(provincias.values('idProvincia', 'nombreProvincia')), safe=False)
 
+@login_required
 def load_comunas(request):
     provincia_id = request.GET.get('provincia')
     comunas = Comuna.objects.filter(provincia_id=provincia_id).order_by('nombreComuna')

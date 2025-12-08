@@ -48,8 +48,18 @@
                 {{ form.password }}
                 <div class="text-danger">{{ form.password.errors }}</div>
             </div>
+
+            {% if request.GET.next %}
+                <input type="hidden" name="next" value="{{ request.GET.next }}">
+            {% endif %}
             
             <button type="submit" class="btn btn-primary w-100 mt-3">Ingresar</button>
+
+            <div class="text-center mt-3">
+                <a href="{% url 'password_reset' %}" class="text-decoration-none small">
+                ¿Olvidaste tu contraseña?
+                </a>
+            </div>
         </form>
     </div>
 

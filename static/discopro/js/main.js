@@ -1,17 +1,42 @@
 document.addEventListener('DOMContentLoaded', function() {
 
-    //  SIDEBAR TOGGLE
-    const sidebarToggle = document.getElementById("sidebarToggle");
     const wrapper = document.getElementById("wrapper");
+    const sidebarToggle = document.getElementById("sidebarToggle");
+    const storageKey = 'discopro_sidebar_state';
 
+    // =========================================================
+    // 1. REACTIVAR ANIMACIONES (SOLUCIÓN FINAL AL PARPADEO)
+    // =========================================================
+    if (wrapper) {
+        // Usamos requestAnimationFrame para asegurar que el navegador 
+        // ya pintó el estado inicial antes de reactivar las transiciones.
+        requestAnimationFrame(() => {
+            setTimeout(() => {
+                wrapper.classList.remove('no-transition');
+            }, 50); // Un retraso mínimo imperceptible
+        });
+    }
+
+    // =========================================================
+    // 2. TOGGLE DEL SIDEBAR (CLICK)
+    // =========================================================
     if (sidebarToggle && wrapper) {
         sidebarToggle.addEventListener("click", function(e) {
             e.preventDefault();
             wrapper.classList.toggle("toggled");
+
+            // Guardar estado en memoria
+            if (wrapper.classList.contains("toggled")) {
+                localStorage.setItem(storageKey, 'hidden');
+            } else {
+                localStorage.setItem(storageKey, 'visible');
+            }
         });
     }
 
-    //  AUTO-CIERRE DE ALERTAS
+    // =========================================================
+    // 3. AUTO-CIERRE DE ALERTAS
+    // =========================================================
     const alerts = document.querySelectorAll('.alert');
     if (alerts.length > 0) {
         setTimeout(function() {
@@ -28,8 +53,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 3000);
     }
 
-
-    // 3. BUSCADOR CON X
+    // =========================================================
+    // 4. BUSCADOR CON BOTÓN 'X'
+    // =========================================================
     const searchInputs = document.querySelectorAll('input[name="q"]');
 
     searchInputs.forEach(input => {
@@ -53,6 +79,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             input.addEventListener('input', toggleClearBtn);
             toggleClearBtn();
+
             clearBtn.addEventListener('click', function() {
                 input.value = '';  
                 if (input.form) {

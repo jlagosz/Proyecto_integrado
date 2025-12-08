@@ -23,32 +23,32 @@
             <tr>
                 <th class="sortable">
                     <a href="?{% url_replace sort=None %}&sort={% next_sort 'nombres' %}">
-                       Nombre Completo <i class="bi {% sort_icon 'nombres' %}"></i>
+                        Nombre Completo <i class="bi {% sort_icon 'nombres' %}"></i>
                     </a>
                 </th>
                 <th class="sortable">
                     <a href="?{% url_replace sort=None %}&sort={% next_sort 'username' %}">
-                       Usuario <i class="bi {% sort_icon 'username' %}"></i>
+                        Usuario <i class="bi {% sort_icon 'username' %}"></i>
                     </a>
                 </th>
                 <th class="sortable">
                     <a href="?{% url_replace sort=None %}&sort={% next_sort 'rut' %}">
-                       RUT <i class="bi {% sort_icon 'rut' %}"></i>
+                        RUT <i class="bi {% sort_icon 'rut' %}"></i>
                     </a>
                 </th>
                 <th class="sortable">
                      <a href="?{% url_replace sort=None %}&sort={% next_sort 'email' %}">
-                       Correo <i class="bi {% sort_icon 'email' %}"></i>
+                        Correo <i class="bi {% sort_icon 'email' %}"></i>
                     </a>
                 </th>
                 <th class="sortable">
                     <a href="?{% url_replace sort=None %}&sort={% next_sort 'rol' %}">
-                       Rol <i class="bi {% sort_icon 'rol' %}"></i>
+                        Rol <i class="bi {% sort_icon 'rol' %}"></i>
                     </a>
                 </th>
                 <th class="sortable">
                     <a href="?{% url_replace sort=None %}&sort={% next_sort 'estado' %}">
-                       Estado <i class="bi {% sort_icon 'estado' %}"></i>
+                        Estado <i class="bi {% sort_icon 'estado' %}"></i>
                     </a>
                 </th>
                 <th>Acciones</th>
@@ -69,11 +69,33 @@
                 <td>{{ usuario.email|default:"--" }}</td>
                 <td>
                     {% if usuario.is_superuser %}
-                        <span class="badge bg-danger">Super Admin</span>
-                    {% elif usuario.rol %}
-                        {{ usuario.rol.nombreRol }}
+                        <span class="badge rounded-pill bg-dark border border-light">
+                            <i class="bi bi-shield-lock-fill"></i> Superusuario
+                        </span>
                     {% else %}
-                        <span class="badge bg-secondary">Sin Rol</span>
+                        {% with rol=usuario.rol.nombreRol|lower %}
+                            {% if 'admin' in rol %}
+                                <span class="badge rounded-pill bg-primary">
+                                    <i class="bi bi-person-fill-gear"></i> {{ usuario.rol.nombreRol }}
+                                </span>
+                            {% elif 'gerente' in rol %}
+                                <span class="badge rounded-pill bg-success">
+                                    <i class="bi bi-briefcase-fill"></i> {{ usuario.rol.nombreRol }}
+                                </span>
+                            {% elif 'supervisor' in rol %}
+                                <span class="badge rounded-pill bg-info text-dark">
+                                    <i class="bi bi-eye-fill"></i> {{ usuario.rol.nombreRol }}
+                                </span>
+                            {% elif 'operador' in rol %}
+                                <span class="badge rounded-pill bg-secondary">
+                                    <i class="bi bi-person-badge"></i> {{ usuario.rol.nombreRol }}
+                                </span>
+                            {% else %}
+                                <span class="badge rounded-pill bg-light text-dark border">
+                                    {{ usuario.rol.nombreRol }}
+                                </span>
+                            {% endif %}
+                        {% endwith %}
                     {% endif %}
                 </td>
                 <td>
@@ -145,4 +167,5 @@
   </ul>
 </nav>
 {% endif %}
+
 {% endblock %}

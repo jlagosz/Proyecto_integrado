@@ -26,37 +26,37 @@
             <tr>
                 <th class="sortable">
                     <a href="?{% url_replace sort=None %}&sort={% next_sort 'numero_despacho' %}">
-                       N° Despacho <i class="bi {% sort_icon 'numero_despacho' %}"></i>
+                        N° Despacho <i class="bi {% sort_icon 'numero_despacho' %}"></i>
                     </a>
                 </th>
                 <th class="sortable">
                     <a href="?{% url_replace sort=None %}&sort={% next_sort 'tipo_movimiento' %}">
-                       Tipo <i class="bi {% sort_icon 'tipo_movimiento' %}"></i>
+                        Tipo <i class="bi {% sort_icon 'tipo_movimiento' %}"></i>
                     </a>
                 </th>
                 <th class="sortable">
                     <a href="?{% url_replace sort=None %}&sort={% next_sort 'origen' %}">
-                       Origen <i class="bi {% sort_icon 'origen' %}"></i>
+                        Origen <i class="bi {% sort_icon 'origen' %}"></i>
                     </a>
                 </th>
                 <th class="sortable">
                     <a href="?{% url_replace sort=None %}&sort={% next_sort 'destino' %}">
-                       Destino Final <i class="bi {% sort_icon 'destino' %}"></i>
+                        Destino Final <i class="bi {% sort_icon 'destino' %}"></i>
                     </a>
                 </th>
                 <th class="sortable">
                     <a href="?{% url_replace sort=None %}&sort={% next_sort 'motorista' %}">
-                       Motorista <i class="bi {% sort_icon 'motorista' %}"></i>
+                        Motorista <i class="bi {% sort_icon 'motorista' %}"></i>
                     </a>
                 </th>
                 <th class="sortable">
                     <a href="?{% url_replace sort=None %}&sort={% next_sort 'fecha_movimiento' %}">
-                       Fecha <i class="bi {% sort_icon 'fecha_movimiento' %}"></i>
+                        Fecha <i class="bi {% sort_icon 'fecha_movimiento' %}"></i>
                     </a>
                 </th>
                 <th class="sortable">
                     <a href="?{% url_replace sort=None %}&sort={% next_sort 'estado' %}">
-                       Estado <i class="bi {% sort_icon 'estado' %}"></i>
+                        Estado <i class="bi {% sort_icon 'estado' %}"></i>
                     </a>
                 </th>
                 <th>Acciones</th>
@@ -71,7 +71,30 @@
                 <td>{{ movimiento.destino }}</td>
                 <td>{{ movimiento.motorista_asignado|default:"N/A" }}</td>
                 <td>{{ movimiento.fecha_movimiento|date:"d-m-Y H:i" }}</td>
-                <td><span class="badge bg-primary">{{ movimiento.get_estado_display }}</span></td>
+                
+                <td>
+                    {% if movimiento.estado == 'completado' %}
+                        <span class="badge bg-success shadow-sm">
+                            <i class="bi bi-check-circle-fill"></i> Completado
+                        </span>
+                    
+                    {% elif movimiento.estado == 'pendiente' %}
+                        <span class="badge bg-warning text-dark shadow-sm">
+                            <i class="bi bi-hourglass-split"></i> Pendiente
+                        </span>
+                    
+                    {% elif movimiento.estado == 'anulado' %}
+                        <span class="badge bg-danger shadow-sm">
+                            <i class="bi bi-x-circle-fill"></i> Anulado
+                        </span>
+                    
+                    {% else %}
+                        <span class="badge bg-secondary">
+                            {{ movimiento.get_estado_display }}
+                        </span>
+                    {% endif %}
+                </td>
+
                 <td>
                     <a href="{{ movimiento.get_absolute_url }}" class="btn btn-sm btn-info">Ver Detalle</a>
                     <a href="{% url 'movimiento_editar' movimiento.pk %}" class="btn btn-sm btn-warning">Editar</a>
@@ -86,13 +109,19 @@
 </div>
 
 {% if is_paginated %}
-<nav class="mt-4">
+<nav class="mt-4" aria-label="Navegación de páginas">
   <ul class="pagination justify-content-center">
+    
     {% if page_obj.has_previous %}
-      <li class="page-item"><a class="page-link" href="?{% url_replace page=page_obj.previous_page_number %}">Anterior</a></li>
+      <li class="page-item">
+        <a class="page-link" href="?{% url_replace page=page_obj.previous_page_number %}" aria-label="Anterior">
+            <span aria-hidden="true">&laquo;</span>
+        </a>
+      </li>
     {% else %}
-      <li class="page-item disabled"><span class="page-link">Anterior</span></li>
+      <li class="page-item disabled"><span class="page-link" aria-hidden="true">&laquo;</span></li>
     {% endif %}
+
     {% for i in paginator.page_range %}
       {% if page_obj.number == i %}
         <li class="page-item active"><span class="page-link">{{ i }}</span></li>
@@ -100,12 +129,18 @@
         <li class="page-item"><a class="page-link" href="?{% url_replace page=i %}">{{ i }}</a></li>
       {% endif %}
     {% endfor %}
+
     {% if page_obj.has_next %}
-      <li class="page-item"><a class="page-link" href="?{% url_replace page=page_obj.next_page_number %}">Siguiente</a></li>
+      <li class="page-item">
+        <a class="page-link" href="?{% url_replace page=page_obj.next_page_number %}" aria-label="Siguiente">
+            <span aria-hidden="true">&raquo;</span>
+        </a>
+      </li>
     {% else %}
-      <li class="page-item disabled"><span class="page-link">Siguiente</span></li>
+      <li class="page-item disabled"><span class="page-link" aria-hidden="true">&raquo;</span></li>
     {% endif %}
   </ul>
 </nav>
 {% endif %}
+
 {% endblock %}

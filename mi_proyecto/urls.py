@@ -1,5 +1,5 @@
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include  # <--- 1. AGREGAR 'include' AQUÍ
 from discopro import views
 from django.conf import settings
 from django.conf.urls.static import static
@@ -7,7 +7,10 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('admin/', admin.site.urls),
     
-    # --- VISTA LOGIN ---
+    # --- RUTAS DE AUTENTICACIÓN Y PASSWORD RESET ---
+    path('accounts/', include('django.contrib.auth.urls')), 
+
+    # --- VISTA LOGIN PROPIA ---
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
 
@@ -20,10 +23,10 @@ urlpatterns = [
     path('usuarios/editar/<int:pk>/', views.UsuarioUpdateView.as_view(), name='usuario_editar'),
     path('usuarios/eliminar/<int:pk>/', views.UsuarioDeleteView.as_view(), name='usuario_eliminar'),
     
-    # --- CONFIG USUARIOS ---
+    # --- CONFIG USUARIOS --
     path('mi-cuenta/', views.MiCuentaView.as_view(), name='mi_cuenta'),
     path('configuracion/', views.ConfiguracionView.as_view(), name='configuracion'),
-
+    
     # --- CRUD FARMACIAS ---
     path('farmacias/', views.FarmaciaListView.as_view(), name='farmacia_lista'), 
     path('farmacias/crear/', views.FarmaciaCreateView.as_view(), name='farmacia_crear'),
@@ -79,4 +82,4 @@ urlpatterns = [
 ]
 
 if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) # Corrección menor: es MEDIA_ROOT

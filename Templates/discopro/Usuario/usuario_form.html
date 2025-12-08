@@ -34,14 +34,14 @@
                     <div class="mb-3">
                       <label class="form-label">Nombres</label>
                       {{ form.first_name.as_widget }}
-                      <div class="text-danger">{{ form.first_name.errors }}</div>
+                      <div class="text-danger small">{{ form.first_name.errors }}</div>
                     </div>
                   </div>
                   <div class="col-md-6">
                     <div class="mb-3">
                       <label class="form-label">Apellidos</label>
                       {{ form.last_name.as_widget }}
-                      <div class="text-danger">{{ form.last_name.errors }}</div>
+                      <div class="text-danger small">{{ form.last_name.errors }}</div>
                     </div>
                   </div>
                 </div>
@@ -51,14 +51,14 @@
                         <div class="mb-3">
                           <label class="form-label">RUT</label>
                           {{ form.rut.as_widget }}
-                          <div class="text-danger">{{ form.rut.errors }}</div>
+                          <div class="text-danger small">{{ form.rut.errors }}</div>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="mb-3">
                           <label class="form-label">Teléfono</label>
                           {{ form.telefono.as_widget }}
-                          <div class="text-danger">{{ form.telefono.errors }}</div>
+                          <div class="text-danger small">{{ form.telefono.errors }}</div>
                         </div>
                     </div>
                 </div>
@@ -66,7 +66,7 @@
                 <div class="mb-3">
                   <label class="form-label">Correo Electrónico</label>
                   {{ form.email.as_widget }}
-                  <div class="text-danger">{{ form.email.errors }}</div>
+                  <div class="text-danger small">{{ form.email.errors }}</div>
                 </div>
                 
                 <h5 class="text-muted mb-3 mt-4 pb-2 border-bottom">Rol y Permisos</h5>
@@ -76,7 +76,7 @@
                     <div class="mb-3">
                       <label class="form-label">Rol Asignado</label>
                       {{ form.rol.as_widget }}
-                      <div class="text-danger">{{ form.rol.errors }}</div>
+                      <div class="text-danger small">{{ form.rol.errors }}</div>
                     </div>
                   </div>
                   <div class="col-md-6">
@@ -87,7 +87,7 @@
                               ¿Usuario Activo?
                           </label>
                       </div>
-                      <div class="text-danger">{{ form.is_active.errors }}</div>
+                      <div class="text-danger small">{{ form.is_active.errors }}</div>
                     </div>
                   </div>
                 </div>
@@ -97,9 +97,10 @@
                 <div class="mb-3">
                   <label class="form-label">Nombre de Usuario (Login)</label>
                   {{ form.username.as_widget }}
-                  <div class="text-danger">{{ form.username.errors }}</div>
+                  <div class="text-danger small">{{ form.username.errors }}</div>
                 </div>
 
+                {% if form.password %}
                 <div class="row">
                   <div class="col-md-6">
                     <div class="mb-3">
@@ -110,19 +111,19 @@
                           {{ form.password.help_text|safe }}
                       </small>
                       
-                      <div class="text-danger">{{ form.password.errors }}</div>
+                      <div class="text-danger small">{{ form.password.errors }}</div>
                     </div>
                   </div>
                   <div class="col-md-6">
                     <div class="mb-3">
                       <label class="form-label">Confirmar Contraseña</label>
                       {{ form.confirmar_contrasena.as_widget }}
-                      <div class="text-danger">{{ form.confirmar_contrasena.errors }}</div>
+                      <div class="text-danger small">{{ form.confirmar_contrasena.errors }}</div>
                     </div>
                   </div>
                 </div>
-                
-                <div class="form-actions mt-4">
+                {% endif %}
+                <div class="form-actions mt-4 d-flex justify-content-end gap-2">
                     <a href="{% url 'usuario_lista' %}" class="btn btn-secondary">Cancelar</a>
                     <button type="submit" class="btn btn-primary">
                         <i class="bi bi-save"></i> Guardar Usuario
@@ -137,6 +138,9 @@
   document.addEventListener('DOMContentLoaded', function() {
       document.querySelectorAll('select').forEach(function(select) {
           select.classList.add('form-select');
+      });
+      document.querySelectorAll('input:not(.form-check-input)').forEach(function(input) {
+          input.classList.add('form-control');
       });
   });
 </script>

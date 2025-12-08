@@ -54,7 +54,7 @@ class CustomLoginForm(AuthenticationForm):
 
 class UsuarioForm(forms.ModelForm):
     """
-    Formulario para Crear/Editar usuarios con validación de seguridad completa.
+    Formulario para Crear usuarios con validación de seguridad completa.
     """
     password = forms.CharField(
         label="Contraseña",
@@ -136,6 +136,39 @@ class UsuarioForm(forms.ModelForm):
         if commit:
             user.save()
         return user
+
+class UsuarioUpdateForm(forms.ModelForm):
+    """
+    Formulario EXCLUSIVO para editar usuarios.
+    """
+    class Meta:
+        model = Usuario
+        fields = [
+            'username', 'first_name', 'last_name', 'email', 
+            'rut', 'telefono', 'rol', 'is_active'
+        ]
+        widgets = {
+            'username': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombre de usuario'}),
+            'first_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombres'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Apellidos'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'correo@ejemplo.com'}),
+            'rut': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '12.345.678-9'}),
+            'telefono': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '+569... (Opcional)'}),
+            'rol': forms.Select(attrs={'class': 'form-select'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Marcamos los campos obligatorios visualmente
+        campos_obligatorios = ['first_name', 'last_name', 'email', 'rut', 'rol']
+        for campo in campos_obligatorios:
+            self.fields[campo].required = True
+            # Agregar asterisco si tiene placeholder
+            if 'placeholder' in self.fields[campo].widget.attrs:
+                current_placeholder = self.fields[campo].widget.attrs['placeholder']
+                if not current_placeholder.endswith('*'):
+                    self.fields[campo].widget.attrs['placeholder'] += ' *'
 
 # --- FORMULARIOS MODULOS ---
 # --- Farmacia ---

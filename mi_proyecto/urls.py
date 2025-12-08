@@ -1,5 +1,5 @@
 from django.contrib import admin
-from django.urls import path, include  # <--- 1. AGREGAR 'include' AQUÍ
+from django.urls import path, include 
 from discopro import views
 from django.conf import settings
 from django.conf.urls.static import static
@@ -23,8 +23,12 @@ urlpatterns = [
     path('usuarios/editar/<int:pk>/', views.UsuarioUpdateView.as_view(), name='usuario_editar'),
     path('usuarios/eliminar/<int:pk>/', views.UsuarioDeleteView.as_view(), name='usuario_eliminar'),
     
+    # [NUEVO] Resetear contraseña (Admin a otro usuario)
+    path('usuarios/reset-password/<int:pk>/', views.AdminPasswordResetView.as_view(), name='usuario_reset_password'),
+    
     # --- CONFIG USUARIOS --
     path('mi-cuenta/', views.MiCuentaView.as_view(), name='mi_cuenta'),
+    path('mi-cuenta/editar/', views.MiCuentaUpdateView.as_view(), name='mi_cuenta_editar'),
     path('configuracion/', views.ConfiguracionView.as_view(), name='configuracion'),
     
     # --- CRUD FARMACIAS ---
@@ -82,4 +86,4 @@ urlpatterns = [
 ]
 
 if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) # Corrección menor: es MEDIA_ROOT
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

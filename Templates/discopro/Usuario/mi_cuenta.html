@@ -1,18 +1,71 @@
 {% extends 'discopro/base.html' %}
+{% load static %}
+
 {% block title %}Mi Cuenta{% endblock %}
+
 {% block content %}
-<div class="container">
-    <h1 class="mb-4">Mi Perfil</h1>
-    <div class="card">
-        <div class="card-header">Información Personal</div>
-        <div class="card-body">
-            <p><strong>Usuario:</strong> {{ usuario.username }}</p>
-            <p><strong>Nombre Completo:</strong> {{ usuario.first_name }} {{ usuario.last_name }}</p>
-            <p><strong>Email:</strong> {{ usuario.email }}</p>
-            <p><strong>RUT:</strong> {{ usuario.rut }}</p>
-            <p><strong>Rol:</strong> {{ usuario.rol.nombreRol|default:"Sin rol asignado" }}</p>
-            <hr>
-            <a href="{% url 'usuario_editar' usuario.pk %}" class="btn btn-primary">Editar mis datos</a>
+<div class="row justify-content-center mt-4">
+    <div class="col-md-8">
+        
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h4 class="mb-0"><i class="bi bi-person-circle"></i> Mi Perfil</h4>
+                <span class="badge bg-light text-primary">
+                    {{ usuario.rol.nombreRol|default:"Usuario" }}
+                </span>
+            </div>
+
+            <div class="card-body">
+                
+                <div class="text-center mb-4">
+                    <i class="bi bi-person-circle text-secondary" style="font-size: 4rem;"></i>
+                    <h2 class="mt-2">{{ usuario.first_name }} {{ usuario.last_name }}</h2>
+                    <p class="text-muted">@{{ usuario.username }}</p>
+                </div>
+
+                <hr>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="fw-bold text-secondary">RUT:</label>
+                        <p class="fs-5">{{ usuario.rut|default:"--" }}</p>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="fw-bold text-secondary">Correo:</label>
+                        <p class="fs-5">{{ usuario.email|default:"--" }}</p>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="fw-bold text-secondary">Teléfono:</label>
+                        <p class="fs-5">{{ usuario.telefono|default:"--" }}</p>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="fw-bold text-secondary">Estado:</label>
+                        <div>
+                            {% if usuario.is_active %}
+                                <span class="badge bg-success">Activo</span>
+                            {% else %}
+                                <span class="badge bg-danger">Inactivo</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="my-4">
+
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'mi_cuenta_editar' %}" class="btn btn-warning">
+                        <i class="bi bi-pencil-square"></i> Editar Mis Datos
+                    </a>
+
+                    <a href="{% url 'password_change' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-key-fill"></i> Cambiar Contraseña
+                    </a>
+                </div>
+
+            </div>
         </div>
     </div>
 </div>

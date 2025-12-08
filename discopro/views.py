@@ -19,13 +19,14 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin 
 from .forms import CustomLoginForm
+from django.contrib.auth.forms import SetPasswordForm
 
 from discopro.utils import render_to_pdf 
 
 from .forms import (
     UsuarioForm, FarmaciaForm, MotoristaForm, MotoForm, 
     AsignacionFarmaciaForm, AsignacionMotoForm, DocumentacionMotoForm, MantenimientoForm,
-    ContactoEmergenciaForm, MovimientoForm
+    ContactoEmergenciaForm, MovimientoForm, UsuarioUpdateForm
 )
 
 # Importamos Modelos
@@ -174,8 +175,6 @@ class ExportarReportePDFView(LoginRequiredMixin, View):
             # Estadísticas (Agrupado por mes)
             datos_agrupados = defaultdict(int)
             for mov in movimientos:
-                # Para la estadística anual, ¿quieres contar solo los completados o todos?
-                # Si quieres que la estadística siga siendo "productividad", filtramos aquí solo para el gráfico:
                 if mov.estado == 'completado': 
                     fecha_local = timezone.localtime(mov.fecha_movimiento)
                     mes_key = fecha_local.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
@@ -257,7 +256,7 @@ class UsuarioCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
 
 class UsuarioUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
     model = Usuario
-    form_class = UsuarioForm
+    form_class = UsuarioUpdateForm
     template_name = 'discopro/Usuario/usuario_form.html'
     success_url = reverse_lazy('usuario_lista')
     success_message = "Usuario actualizado exitosamente."
@@ -281,6 +280,37 @@ class MiCuentaView(LoginRequiredMixin, DetailView):
 
     def get_object(self):
         return self.request.user
+
+class MiCuentaUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+    """Permite al usuario logueado editar sus propios datos básicos."""
+    model = Usuario
+    form_class = UsuarioUpdateForm
+    template_name = 'discopro/Usuario/mi_cuenta_form.html'
+    success_url = reverse_lazy('mi_cuenta')
+    success_message = "Tu perfil ha sido actualizado."
+
+    def get_object(self):
+        return self.request.user
+
+class AdminPasswordResetView(LoginRequiredMixin, SuccessMessageMixin, View):
+    """Vista para que un Admin cambie la contraseña de otro usuario."""
+    template_name = 'discopro/Usuario/admin_password_reset.html'
+
+    def get(self, request, pk):
+        usuario_a_editar = get_object_or_404(Usuario, pk=pk)
+        form = SetPasswordForm(user=usuario_a_editar)
+        return render(request, self.template_name, {'form': form, 'usuario': usuario_a_editar})
+
+    def post(self, request, pk):
+        usuario_a_editar = get_object_or_404(Usuario, pk=pk)
+        form = SetPasswordForm(user=usuario_a_editar, data=request.POST)
+        
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"Contraseña actualizada para {usuario_a_editar.username}")
+            return redirect('usuario_lista')
+        
+        return render(request, self.template_name, {'form': form, 'usuario': usuario_a_editar})
 
 class ConfiguracionView(LoginRequiredMixin, TemplateView):
     """Vista placeholder para configuración."""

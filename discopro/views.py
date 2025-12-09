@@ -26,7 +26,7 @@ from discopro.utils import render_to_pdf
 from .forms import (
     UsuarioForm, FarmaciaForm, MotoristaForm, MotoForm, 
     AsignacionFarmaciaForm, AsignacionMotoForm, DocumentacionMotoForm, MantenimientoForm,
-    ContactoEmergenciaForm, MovimientoForm, UsuarioUpdateForm
+    ContactoEmergenciaForm, MovimientoForm, UsuarioUpdateForm, TramoForm
 )
 
 # Importamos Modelos
@@ -759,7 +759,7 @@ class MovimientoDeleteView(LoginRequiredMixin, DeleteView):
 
 class TramoCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
     model = Movimiento
-    form_class = MovimientoForm
+    form_class = TramoForm
     template_name = 'discopro/Movimiento/tramo_form.html'
     success_message = "Tramo añadido exitosamente."
 
@@ -779,20 +779,31 @@ class TramoCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
     def get_initial(self):
         initial = super().get_initial()
         padre = self.get_movimiento_padre()
-        tramos_previos = Movimiento.objects.filter(movimiento_padre=padre).order_by('fecha_movimiento')
-        ultimo_tramo = tramos_previos.last()
 
         initial['movimiento_padre'] = padre
         initial['usuario_responsable'] = padre.usuario_responsable
         initial['motorista_asignado'] = padre.motorista_asignado
         initial['estado'] = 'pendiente'
 
-        if ultimo_tramo:
-            initial['origen'] = ultimo_tramo.destino 
-        else:
-            initial['origen'] = padre.origen
-        
+        # --- Lógica de Usabilidad para el Origen ---
+        # Buscamos si el texto del origen del padre coincide con alguna Farmacia en la BD
+        # para dejarla seleccionada por defecto en el dropdown.
+        try:
+            # Buscamos coincidencia exacta o parcial (icontains)
+            farmacia_match = Farmacia.objects.filter(nombre__iexact=padre.origen).first()
+            if not farmacia_match:
+                 # Intento secundario: si el origen padre dice "Farmacia Ahumada", busca "Ahumada"
+                farmacia_match = Farmacia.objects.filter(nombre__icontains=padre.origen).first()
+            
+            if farmacia_match:
+                initial['farmacia_origen'] = farmacia_match
+        except:
+            pass # Si falla, simplemente el select aparecerá en "Seleccione..."
+
+        # El destino lo dejamos vacío o copiamos el del padre si lo deseas, 
+        # pero según tu lógica el hijo siempre sale de farmacia hacia X destino.
         initial['destino'] = padre.destino 
+        
         return initial
 
     def get_success_url(self):

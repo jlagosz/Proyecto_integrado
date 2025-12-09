@@ -459,6 +459,42 @@ class MovimientoForm(forms.ModelForm):
         
         return origen
 
+class TramoForm(MovimientoForm):
+    """
+    Formulario especializado para Tramos (Hijos).
+    El origen es obligatoriamente una Farmacia seleccionable.
+    """
+    farmacia_origen = forms.ModelChoiceField(
+        queryset=Farmacia.objects.all().order_by('nombre'),
+        label="Farmacia de Origen",
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        empty_label="Seleccione Farmacia..."
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        #  El campo 'origen' real del modelo lo ocultamos, se llenará solo.
+        self.fields['origen'].widget = forms.HiddenInput()
+        self.fields['origen'].required = False
+        
+        #  Reordenamos los campos para que 'farmacia_origen' aparezca primero visualmente
+        field_order = ['farmacia_origen', 'destino', 'motorista_asignado', 'observacion']
+        # Mantenemos el orden pero priorizamos los de arriba
+        new_fields = {k: self.fields[k] for k in field_order if k in self.fields}
+        new_fields.update(self.fields)
+        self.fields = new_fields
+
+    def clean(self):
+        cleaned_data = super().clean()
+        farmacia = cleaned_data.get('farmacia_origen')
+
+        # Si el usuario seleccionó una farmacia, pasamos su nombre al campo 'origen' del modelo
+        if farmacia:
+            cleaned_data['origen'] = farmacia.nombre
+            self.instance.origen = farmacia.nombre
+        
+        return cleaned_data
+
 # --- ASIGNACIONES ---
 class AsignacionFarmaciaForm(forms.ModelForm):
     """Formulario para asignar una Farmacia a un Motorista."""
